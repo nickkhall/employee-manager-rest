@@ -139,6 +139,18 @@ void serialize_unmarshall_data_string(char* dest, ser_buff_t* b, int size) {
 
 /*
  * ----------------------------------------------------------------------
+ * function: serialize_marshall_data_time_t
+ * ----------------------------------------------------------------------
+ * params  : b - ser_buff_t*
+ * ----------------------------------------------------------------------
+ * Serializes a buffers' Employee buffer.
+ * ----------------------------------------------------------------------
+ */
+void serialize_marshall_data_time_t(time_t* dest, ser_buff_t*b, int size) {
+};
+
+/*
+ * ----------------------------------------------------------------------
  * function: serialize_unmarshall_data_time_t
  * ----------------------------------------------------------------------
  * params  : b - ser_buff_t*
@@ -147,20 +159,6 @@ void serialize_unmarshall_data_string(char* dest, ser_buff_t* b, int size) {
  * ----------------------------------------------------------------------
  */
 void serialize_unmarshall_data_time_t(time_t* dest, ser_buff_t*b, int size) {
-};
-
-
-
-/*
- * ----------------------------------------------------------------------
- * function: serialize_marshall_data_int
- * ----------------------------------------------------------------------
- * params  : b - ser_buff_t*
- * ----------------------------------------------------------------------
- * Serializes a buffers' Employee buffer.
- * ----------------------------------------------------------------------
- */
-void serialize_unmarshall_data_int(int* dest, ser_buff_t*b, int size) {
 };
 
 /*
@@ -172,7 +170,7 @@ void serialize_unmarshall_data_int(int* dest, ser_buff_t*b, int size) {
  * Serializes a buffers' Employee buffer.
  * ----------------------------------------------------------------------
  */
-Employee* serialize_marshall_data_employee(ser_buff_t* b) {
+void* serialize_marshall_data_employees(ser_buff_t* b) {
   // set sentintal to default
   unsigned int sentinel = 0;
 
@@ -186,23 +184,62 @@ Employee* serialize_marshall_data_employee(ser_buff_t* b) {
 
   serialize_buffer_skip(b, (int)(-1 * sizeof(unsigned int)));
 
+  Employees* employees = calloc(1, sizeof(Employee));
   // person_t* obj = calloc(1, sizeof(person_t));
   // de_serialize_data((char*)obj->name, b, sizeof(char) * 30);
   // de_serialize_data((char*)obj->age, b, sizeof(int));
   // de_serialize_data((char*)obj->weight, b, sizeof(int));
   //
   //
-  //serialize_unmarshall_data_string((char*));
-  //serialize_unmarshall_data_string();
-  //serialize_unmarshall_data_string();
-  //serialize_unmarshall_data_string();
-  //serialize_unmarshall_data_string();
-  //serialize_unmarshall_data_time_t();
-  //serialize_unmarshall_data_string();
-  //serialize_unmarshall_data_string();
-  //serialize_unmarshall_data_string();
-  //serialize_unmarshall_data_string();
-  //serialize_unmarshall_data_int();
+  //serialize_unmarshall_data_string((char*)employee->id, b, sizeof(char) * 33);
+  //serialize_unmarshall_data_string((char*)employee->first, b, sizeof(char) * 33);
+  //serialize_unmarshall_data_string((char*)employee->last, b, sizeof(char) * 33);
+  //serialize_unmarshall_data_string((char*)employee->email, b, sizeof(char) * 33);
+  //serialize_unmarshall_data_string((char*)employee->address, b, sizeof(char) * 33);
+  //serialize_unmarshall_data_string((char*)employee->phone, b, sizeof(char) * 33);
+  //serialize_unmarshall_data_string((char*)employee->start, b, sizeof(char) * 33);
+  //serialize_unmarshall_data_string((char*)employee->gender, b, sizeof(char) * 33);
+  //serialize_unmarshall_data_string((char*)employee->ethnicity, b, sizeof(char) * 33);
+  //serialize_unmarshall_data_string((char*)employee->title, b, sizeof(char) * 33);
+  //serialize_unmarshall_data_string((char*)employee->salary, b, sizeof(char) * 33);
+};
+
+/*
+ * ----------------------------------------------------------------------
+ * function: serialize_unmarshall_data_employees
+ * ----------------------------------------------------------------------
+ * params  : b - ser_buff_t*
+ * ----------------------------------------------------------------------
+ * Deserializes a buffers' Employee buffer.
+ * ----------------------------------------------------------------------
+ */
+void serialize_unmarshall_data_employees(ser_buff_t* b) {
+
+};
+
+
+/*
+ * ----------------------------------------------------------------------
+ * function: serialize_marshall_data_employee
+ * ----------------------------------------------------------------------
+ * params  : b - ser_buff_t*
+ * ----------------------------------------------------------------------
+ * Deserializes a buffers' Employee buffer.
+ * ----------------------------------------------------------------------
+ */
+void serialize_marshall_data_employee(ser_buff_t* b) {
+  // set sentintal to default
+  unsigned int sentinel = 0;
+
+  // unmarshall buffer to check for sentinel
+  serialize_unmarshall_data_string((char*)&sentinel, b, sizeof(unsigned int));
+
+  // if this is a sentinel section, return null
+  if (sentinel == 0xFFFFFFFF) {
+    return NULL;
+  }
+
+  serialize_buffer_skip(b, (int)(-1 * sizeof(unsigned int)));
 };
 
 /*
@@ -214,7 +251,6 @@ Employee* serialize_marshall_data_employee(ser_buff_t* b) {
  * Deserializes a buffers' Employee buffer.
  * ----------------------------------------------------------------------
  */
-Employee* serialize_unmarshall_data_employee(ser_buff_t* b) {
+void serialize_unmarshall_data_employee(ser_buff_t* b) {
 
 };
-
