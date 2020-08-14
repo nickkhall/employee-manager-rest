@@ -11,7 +11,7 @@
  * params  : b - ser_buff_t**
  * ------------------------------------------------------
  * Initializes the serialized buffer type.
- * -----------serialize_deserialize_data_string-------------------------------------------
+ * ------------------------------------------------------
  */
 void serialize_init_buffer(ser_buff_t** b) {
   // create memory for serialized buffer type
@@ -190,17 +190,19 @@ Employee* serialize_marshall_data_employee(ser_buff_t* b) {
   // de_serialize_data((char*)obj->name, b, sizeof(char) * 30);
   // de_serialize_data((char*)obj->age, b, sizeof(int));
   // de_serialize_data((char*)obj->weight, b, sizeof(int));
-  serialize_unmarshall_data_string((char*));
-  serialize_unmarshall_data_string();
-  serialize_unmarshall_data_string();
-  serialize_unmarshall_data_string();
-  serialize_unmarshall_data_string();
-  serialize_unmarshall_data_time_t();
-  serialize_unmarshall_data_string();
-  serialize_unmarshall_data_string();
-  serialize_unmarshall_data_string();
-  serialize_unmarshall_data_string();
-  serialize_unmarshall_data_int();
+  //
+  //
+  //serialize_unmarshall_data_string((char*));
+  //serialize_unmarshall_data_string();
+  //serialize_unmarshall_data_string();
+  //serialize_unmarshall_data_string();
+  //serialize_unmarshall_data_string();
+  //serialize_unmarshall_data_time_t();
+  //serialize_unmarshall_data_string();
+  //serialize_unmarshall_data_string();
+  //serialize_unmarshall_data_string();
+  //serialize_unmarshall_data_string();
+  //serialize_unmarshall_data_int();
 };
 
 /*
