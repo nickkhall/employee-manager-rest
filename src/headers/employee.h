@@ -13,12 +13,16 @@ typedef struct {
   char* ethnicity;
   char* title;
   int* salary;
-  struct Employee* next_employee;
-} Employee;
+} employee_t;
 
 typedef struct {
-  struct Employee* head;
-} Employees;
+  struct employee_t*      data;
+  struct employee_list_node_t* next;
+} employee_list_node_t;
+
+typedef struct {
+  struct employee_list_node_t* head;
+} employee_list_t;
 
 #endif
 
