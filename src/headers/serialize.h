@@ -99,17 +99,6 @@ void serlib_serialize_data_time_t(time_t* dest, ser_buff_t*b, int size);
 
 /*
  * ----------------------------------------------------------------------
- * function: serlib_serialize_employe_node_t
- * ----------------------------------------------------------------------
- * params  : b - ser_buff_t*
- * ----------------------------------------------------------------------
- * Serializes an employee node.
- * ----------------------------------------------------------------------
- */
-void serlib_serialize_employee_node_t(ser_buff_t* b);
-
-/*
- * ----------------------------------------------------------------------
  * function: serlib_serialize_employee_list_t
  * ----------------------------------------------------------------------
  * params  :
@@ -130,6 +119,7 @@ void serlib_serialize_employee_list_t(employee_list_t* employee_list, ser_buff_t
  * Deserializes an employee list.
  * ----------------------------------------------------------------------
  */
+
 employee_list_t* serlib_deserialize_employee_list_t(ser_buff_t* b);
 
 /*

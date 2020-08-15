@@ -163,50 +163,6 @@ void serlib_deserialize_data_time_t(time_t* dest, ser_buff_t*b, int size) {
 
 /*
  * ----------------------------------------------------------------------
- * function: serlib_serialize_data_employee
- * ----------------------------------------------------------------------
- * params  : b - ser_buff_t*
- * ----------------------------------------------------------------------
- * Serializes a buffers' employee_t buffer.
- * ----------------------------------------------------------------------
-void serlib_serialize_data_employees(ser_buff_t* b) {
-  // set sentintal to default
-  unsigned int sentinel = 0;
-
-  // unmarshall buffer to check for sentinel
-  serlib_serialize_data_string((char*)&sentinel, b, sizeof(unsigned int));
-
-  // if this is a sentinel section, return null
-  if (sentinel == 0xFFFFFFFF) {
-    return NULL;
-  }
-
-  serlib_serialize_buffer_skip(b, (int)(-1 * sizeof(unsigned int)));
-
-  employee_ts* employees = calloc(1, sizeof(employee_t));
-  // person_t* obj = calloc(1, sizeof(person_t));
-  // de_serlib_serialize_data((char*)obj->name, b, sizeof(char) * 30);
-  // de_serlib_serialize_data((char*)obj->age, b, sizeof(int));
-  // de_serlib_serialize_data((char*)obj->weight, b, sizeof(int));
-  //
-  //
-  //serlib_serialize_data_string((char*)employee->id, b, sizeof(char) * 33);
-  //serlib_serialize_data_string((char*)employee->first, b, sizeof(char) * 33);
-  //serlib_serialize_data_string((char*)employee->last, b, sizeof(char) * 33);
-  //serlib_serialize_data_string((char*)employee->email, b, sizeof(char) * 33);
-  //serlib_serialize_data_string((char*)employee->address, b, sizeof(char) * 33);
-  //serlib_serialize_data_string((char*)employee->phone, b, sizeof(char) * 33);
-  //serlib_serialize_data_string((char*)employee->start, b, sizeof(char) * 33);
-  //serlib_serialize_data_string((char*)employee->gender, b, sizeof(char) * 33);
-  //serlib_serialize_data_string((char*)employee->ethnicity, b, sizeof(char) * 33);
-  //serlib_serialize_data_string((char*)employee->title, b, sizeof(char) * 33);
-  //serlib_serialize_data_string((char*)employee->salary, b, sizeof(char) * 33);
-};
-
-*/
-
-/*
- * ----------------------------------------------------------------------
  * function: serlib_serialize_employee_list_t
  * ----------------------------------------------------------------------
  * params  : b - ser_buff_t*
@@ -239,7 +195,7 @@ employee_list_t* serlib_deserialize_employee_list_t(ser_buff_t* b) {
   unsigned int sentinel = 0;
 
   // unmarshall buffer to check for sentinel
-  serlib_serialize_data_string((char*)&sentinel, b, sizeof(unsigned int));
+  serlib_serialize_data_string(b, (char*)&sentinel,  sizeof(unsigned long int));
 
   // if this is a sentinel section, return null
   if (sentinel == 0xFFFFFFFF) {
@@ -269,7 +225,7 @@ void serlib_serialize_employee_list_node_t(employee_list_node_t* employee_list_n
     return;
   }
 
-  serlib_serialize_employee_t(b);
+  serlib_serialize_employee_t(employee_list_node->data, b);
   serlib_serialize_employee_list_node_t(employee_list_node->next, b);
 };
 
@@ -287,7 +243,7 @@ employee_list_node_t* serlib_deserialize_employee_list_node_t(ser_buff_t* b) {
   unsigned int sentinel = 0;
 
   // unmarshall buffer to check for sentinel
-  serlib_serialize_data_string((char*)&sentinel, b, sizeof(unsigned int));
+  serlib_serialize_data_string(b, (char*)&sentinel, sizeof(unsigned int));
 
   // if this is a sentinel section, return null
   if (sentinel == 0xFFFFFFFF) {

@@ -1,7 +1,7 @@
 #ifndef __EMP_MAN_EMPLOYEE_H__
 #define __EMP_MAN_EMPLOYEE_H__
 
-typedef struct {
+typedef struct employee_t {
   char* id;
   char* first;
   char* last;
@@ -15,12 +15,12 @@ typedef struct {
   int* salary;
 } employee_t;
 
-typedef struct {
-  struct employee_t*      data;
+typedef struct employee_list_node_t {
+  struct employee_t*           data;
   struct employee_list_node_t* next;
 } employee_list_node_t;
 
-typedef struct {
+typedef struct employee_list_t {
   struct employee_list_node_t* head;
 } employee_list_t;
 
