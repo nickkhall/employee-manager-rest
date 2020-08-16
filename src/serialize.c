@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "headers/serialize.h"
 #include "headers/employee.h"
@@ -28,6 +29,22 @@ void serlib_serialize_init_buffer(ser_buff_t** b) {
 };
 
 /*
+ * ------------------------------------------------------
+ * function: serlib_serialize_init_buffer_of_size
+ * ------------------------------------------------------
+ * params  : b - ser_buff_t**
+ * ------------------------------------------------------
+ * Initializes the serialized buffer type.
+ * ------------------------------------------------------
+ */
+void serlib_serialize_init_buffer_of_size(ser_buff_t** b, int size) {
+  (*b) = (ser_buff_t*) calloc(1, sizeof(ser_buff_t));
+  (*b)->buffer = calloc(1, size);
+  (*b)->size = size;
+  (*b)->next = 0;
+};
+
+/*
  * --------------------------------------------------------------------
  * function: serlib_serialize_buffer_skip
  * --------------------------------------------------------------------
@@ -52,6 +69,32 @@ void serlib_serialize_buffer_skip(ser_buff_t* b, unsigned long int skip_size) {
 };
 
 /*
+ * ----------------------------------------------------
+ * function: serlib_serialize_get_buffer_length
+ * ----------------------------------------------------
+ * params  : b - ser_buff_t*
+ * ----------------------------------------------------
+ * Gets length of serialized buffer.
+ * ----------------------------------------------------
+ */
+int serlib_serialize_get_buffer_length(ser_buff_t* b) {
+  return b->size;
+};
+
+/*
+ * -------------------------------------------------------
+ * function: serlib_serialize_get_buffer_data_size
+ * -------------------------------------------------------
+ * params  : b - ser_buff_t*
+ * -------------------------------------------------------
+ * Gets data size of serialized buffer.
+ * -------------------------------------------------------
+ */
+int serlib_serialize_get_buffer_data_size(ser_buff_t* b) {
+  return b->size;
+};
+
+/*
  * --------------------------------------------
  * function: serlib_serialize_free_buffer
  * --------------------------------------------
@@ -61,6 +104,7 @@ void serlib_serialize_buffer_skip(ser_buff_t* b, unsigned long int skip_size) {
  * --------------------------------------------
  */
 void serlib_serialize_free_buffer(ser_buff_t* b) {
+  free(b->buffer);
   free(b);
 };
 
@@ -77,18 +121,21 @@ void serlib_serialize_free_buffer(ser_buff_t* b) {
  * ------------------------------------------------------------------------
  */
 void serlib_serialize_data_string(ser_buff_t* b, char* data, int nbytes) {
+  if (b == NULL) assert(0);
+
+  ser_buff_t* buff = (ser_buff_t*)(b);
   // get total available size of buffer
-  int available_size = b->size - b->next;
+  int available_size = buff->size - buff->next;
   // resize flag used for resizing buffer
   int should_resize = 0;
 
   // if we don't have enough memory for data in buffer
   while(available_size < nbytes) {
     // increase (multiply) buffer size by 2
-    b->size = b->size * 2;
+    buff->size = buff->size * 2;
 
     // update total available size
-    available_size = b->size - b->next;
+    available_size = buff->size - buff->next;
 
     // set should resize flag
     should_resize = 1;
@@ -97,22 +144,22 @@ void serlib_serialize_data_string(ser_buff_t* b, char* data, int nbytes) {
   // else we have enough memory for data in buffer
   if (should_resize == 0) {
     // copy data from src to buffer's buffer (b->buffer)
-    memcpy((char*)b->buffer + b->next, data, nbytes);
+    memcpy((char*)buff->buffer + buff->next, data, nbytes);
 
     // increase the buffers next memory to nbytes
-    b->next += nbytes;
+    buff->next += nbytes;
 
     return;
   }
 
   // resize the buffer
-  b->buffer = realloc(b->buffer, b->size);
+  buff->buffer = realloc(buff->buffer, buff->size);
 
   // copy data to buffer's buffer (b->buffer)
-  memcpy((char*)b->buffer + b->next, data, nbytes);
+  memcpy((char*)buff->buffer + buff->next, data, nbytes);
 
   // increase buffer's next memory by nbtyes
-  b->next += nbytes;
+  buff->next += nbytes;
 
   return;
 };
@@ -130,6 +177,10 @@ void serlib_serialize_data_string(ser_buff_t* b, char* data, int nbytes) {
  * ----------------------------------------------------------------------
  */
 void serlib_deserialize_data_string(char* dest, ser_buff_t* b, int size) {
+  if (!b || !b->buffer) assert(0);
+  if (!size) return;
+  if ((b->size - b->next) < size) assert(0);
+
   // copy data from dest to string buffer
   memcpy(dest, b->buffer + b->next, size);
 
@@ -229,6 +280,7 @@ void serlib_serialize_list_node_t(list_node_t* list_node, ser_buff_t* b, void (*
   }
 
   serialize_fn_ptr(list_node->data, b);
+  serlib_serialize_list_node_t(list_node->next, b, serialize_fn_ptr);
 };
 
 /*

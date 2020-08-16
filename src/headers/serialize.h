@@ -23,6 +23,17 @@ typedef struct {
 void serlib_serialize_init_buffer(ser_buff_t** b);
 
 /*
+ * ------------------------------------------------------
+ * function: serlib_serialize_init_buffer_of_size
+ * ------------------------------------------------------
+ * params  : b - ser_buff_t**
+ * ------------------------------------------------------
+ * Initializes the serialized buffer type.
+ * ------------------------------------------------------
+ */
+void serlib_serialize_init_buffer_of_size(ser_buff_t** b, int size);
+
+/*
  * --------------------------------------------------------------------
  * function: serlib_serialize_buffer_skip
  * --------------------------------------------------------------------
@@ -35,6 +46,28 @@ void serlib_serialize_init_buffer(ser_buff_t** b);
  * --------------------------------------------------------------------
  */
 void serlib_serialize_buffer_skip(ser_buff_t* b, unsigned long int skip_size);
+
+/*
+ * ---------------------------------------------------
+ * function: serlib_serialize_get_buffer_length
+ * ---------------------------------------------------
+ * params  : b - ser_buff_t*
+ * ---------------------------------------------------
+ * Frees the memory and destroys a buffer type.
+ * ---------------------------------------------------
+ */
+int serlib_serialize_get_buffer_length(ser_buff_t* b);
+
+/*
+ * -----------------------------------------------------
+ * function: serlib_serialize_get_buffer_data_size
+ * -----------------------------------------------------
+ * params  : b - ser_buff_t*
+ * -----------------------------------------------------
+ * Gets data size of serialized buffer.
+ * -----------------------------------------------------
+ */
+int serlib_serialize_get_buffer_data_size(ser_buff_t* b);
 
 /*
  * --------------------------------------------
