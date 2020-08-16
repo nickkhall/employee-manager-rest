@@ -81,7 +81,7 @@ void serlib_deserialize_data_string(char* dest, ser_buff_t* b, int size);
  * ----------------------------------------------------------------------
  * params  : b - ser_buff_t*
  * ----------------------------------------------------------------------
- * Serializes a buffers' employee_t buffer.
+ * Serializes a time_t.
  * ----------------------------------------------------------------------
  */
 void serlib_serialize_data_time_t(time_t* dest, ser_buff_t*b, int size);
@@ -92,27 +92,29 @@ void serlib_serialize_data_time_t(time_t* dest, ser_buff_t*b, int size);
  * ----------------------------------------------------------------------
  * params  : b - ser_buff_t*
  * ----------------------------------------------------------------------
- * Serializes a buffers' employee_t buffer.
+ * Deserializes a time_t.
  * ----------------------------------------------------------------------
  */
-void serlib_serialize_data_time_t(time_t* dest, ser_buff_t*b, int size);
+void serlib_deserialize_data_time_t(time_t* dest, ser_buff_t*b, int size);
 
 /*
  * ----------------------------------------------------------------------
- * function: serlib_serialize_employee_list_t
+ * function: serlib_serialize_list_t
  * ----------------------------------------------------------------------
  * params  :
- *         > employee_list - employee_list_t*
+ *         > list - list_t*
  *         > b             - ser_buff_t*
  * ----------------------------------------------------------------------
  * Serializes an employee list.
  * ----------------------------------------------------------------------
  */
-void serlib_serialize_employee_list_t(employee_list_t* employee_list, ser_buff_t* b);
+void serlib_serialize_list_t(list_t* list,
+                             ser_buff_t* b,
+                             void(*serialize_fn_ptr)(void*, ser_buff_t* b));
 
 /*
  * ----------------------------------------------------------------------
- * function: serlib_deserialize_employee_list_t
+ * function: serlib_deserialize_list_t
  * ----------------------------------------------------------------------
  * params  : b - ser_buff_t*
  * ----------------------------------------------------------------------
@@ -120,31 +122,46 @@ void serlib_serialize_employee_list_t(employee_list_t* employee_list, ser_buff_t
  * ----------------------------------------------------------------------
  */
 
-employee_list_t* serlib_deserialize_employee_list_t(ser_buff_t* b);
+list_t* serlib_deserialize_list_t(ser_buff_t* b);
 
 /*
  * ----------------------------------------------------------------------
- * function: serlib_serialize_employee_list_node_t
+ * function: serlib_serialize_list_node_t
  * ----------------------------------------------------------------------
  * params  : 
- *         > employee_list_node - employee_list_node_t*
+ *         > list_node - list_node_t*
  *         > b                  - ser_buff_t*
  * ----------------------------------------------------------------------
  * Serializes an employee list node.
  * ----------------------------------------------------------------------
  */
-void serlib_serialize_employee_list_node_t(employee_list_node_t* employee_list_node, ser_buff_t* b);
+void serlib_serialize_list_node_t(list_node_t* list_node,
+                                  ser_buff_t* b,
+                                  void (*serialize_fn_ptr)(void*, ser_buff_t* b));
 
 /*
  * ----------------------------------------------------------------------
- * function: serlib_deserialize_employee_list_node_t
+ * function: serlib_deserialize_list_node_t
  * ----------------------------------------------------------------------
  * params  : b - ser_buff_t*
  * ----------------------------------------------------------------------
  * Deerializes a employee list node.
  * ----------------------------------------------------------------------
  */
-employee_list_node_t* serlib_deserialize_employee_list_node_t(ser_buff_t* b);
+list_node_t* serlib_deserialize_list_node_t(ser_buff_t* b);
+
+/*
+ * ----------------------------------------------------------------------
+ * function: serlib_serialize_employee_t_wrapper
+ * ----------------------------------------------------------------------
+ * params  : 
+ *         > obj - void*
+ *         > b   - ser_buff_t*
+ * ----------------------------------------------------------------------
+ * Deerializes a employee list node.
+ * ----------------------------------------------------------------------
+ */
+void serlib_serialize_employee_t_wrapper(void* obj, ser_buff_t* b);
 
 /*
  * ----------------------------------------------------------------------
