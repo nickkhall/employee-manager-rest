@@ -58,20 +58,27 @@ ser_buff_t* multiply_client_stub_marshal(int a, int b) {
   serlib_init_buffer_of_size(&client_send_ser_buffer, MAX_RECV_SEND_BUFF_SIZE);
 
   // serialized header shite
+  int SERIALIZED_HDR_SIZE = sizeof(struct ser_header_t); // temporary
   serlib_buffer_skip(client_send_ser_buffer, SERIALIZED_HDR_SIZE);
-  serialized_header_t* serialized_header;
-  serialized_header->rpc_proc_id = MULTIPLY_ID;
-  serialized_header->payload_size = 0;
+
+  ser_header_t* ser_header = (ser_header_t*) malloc(sizeof(struct ser_header_t));
+  if (!ser_header) {
+    printf("ERROR:: REST - Failed to allocate memory for serialized header\n");
+    free(client_send_ser_buffer);
+    exit(1);
+  }
+  ser_header->rpc_proc_id = MULTIPLY_ID;
+  ser_header->payload_size = 0;
 
   serlib_serialize_data_string(client_send_ser_buffer, (char*)&a, sizeof(int));
   serlib_serialize_data_string(client_send_ser_buffer, (char*)&b, sizeof(int));
 
   // now that we have payload size
   // resume serialized header shite
-  serialized_header->payload_size = serlib_get_buffer_data_size(client_send_ser_buffer - SERIALIZED_HDR_SIZE);
+  ser_header->payload_size = serlib_get_buffer_data_size(client_send_ser_buffer) - SERIALIZED_HDR_SIZE;
 
-  serlib_copy_in_buffer_by_size(client_send_ser_buff, sizeof(serialized_header->rpc_proc_id), (char*)&serialized_header->rpc_proc_id, 0); 
-  serlib_copy_in_buffer_by_size(client_send_ser_buff, sizeof(serialized_header->payload_size), (char*)&serialized_header->payload_size, sizeof(serialized_header->rpc_proc_id)); 
+  serlib_copy_in_buffer_by_size(client_send_ser_buffer, sizeof(ser_header->rpc_proc_id), (char*)&ser_header->rpc_proc_id, 0); 
+  serlib_copy_in_buffer_by_size(client_send_ser_buffer, sizeof(ser_header->payload_size), (char*)&ser_header->payload_size, sizeof(ser_header->rpc_proc_id)); 
 
   return client_send_ser_buffer;
 }
