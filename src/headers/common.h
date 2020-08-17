@@ -3,8 +3,8 @@
 
 #define MAX_RECV_SEND_BUFF_SIZE 2048
 
-#define SERVER_PORT 8778
-#define SERVER_IP   "127.0.0.1"
+#define RPC_SERVER_PORT 8741
+#define RPC_SERVER_IP   "127.0.0.1"
 
 #endif /* __EMP_MAN_REST_COMMON__ */
 
