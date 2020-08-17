@@ -9,6 +9,8 @@
 #include "src/headers/serialize.h"
 #include "src/headers/sockets.h"
 
+#define MULTIPLY_ID 55
+
 // @TODO: THIS IS A POC FOR LEARNING, WILL REFACTOR LATER
 
 void rpc_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* client_recv_ser_buffer) {
@@ -29,35 +31,12 @@ void rpc_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* client_recv_s
   int rc = 0;
   int recv_size = 0;
   int addr_len = sizeof(struct sockaddr);
-
-  //struct sockaddr_in dest;
-  //int sockfd = 0, rc = 0, recv_size = 0;
-  //int addr_len;
-
-  //dest.sin_family = AF_INET;
-  //dest.sin_port = htons(RPC_SERVER_PORT);
-  //struct hostent* host = (struct hostent*) gethostbyname("127.0.0.1");
-  //
-  //// dest.sin_addr = *((struct in_addr*) host->h_addr_list);
-  //memcpy(&dest.sin_addr, host->h_addr_list[0], host->h_length);
-  //addr_len = sizeof(struct sockaddr);
-
-  //sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-  //if (sockfd == -1) {
-  //  printf("ERROR:: Socket creation failed...\n");
-  //  return;
-  //}
   
   rc = socklib_socket_send_to(sockfd,
                              client_send_ser_buffer->buffer,
                              serlib_get_buffer_data_size(client_send_ser_buffer),
                              0, (struct sockaddr*) dest,
                              sizeof(struct sockaddr));
-
-  //rc = sendto(sockfd, client_send_ser_buffer->buffer,
-  //            serlib_get_buffer_data_size(client_send_ser_buffer),
-  //            0, (struct sockaddr*) &dest,
-  //            sizeof(struct sockaddr));
 
   printf("%s() : %d bytes sent\n", __FUNCTION__, rc);
 
@@ -66,24 +45,42 @@ void rpc_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* client_recv_s
                                        0, (struct sockaddr*)&dest,
                                        &addr_len);
 
-//  recv_size = recvfrom(sockfd, client_recv_ser_buffer->buffer,
-//                       serlib_get_buffer_length(client_recv_ser_buffer),
-//                       0, (struct sockaddr*)&dest,
-//                       &addr_len);
-//
   printf("%s() : %d bytes recieved\n", __FUNCTION__, recv_size);
 }
 
+/*
+ *
+ *
+ *
+ */
 ser_buff_t* multiply_client_stub_marshal(int a, int b) {
   ser_buff_t* client_send_ser_buffer = NULL;
   serlib_init_buffer_of_size(&client_send_ser_buffer, MAX_RECV_SEND_BUFF_SIZE);
 
+  // serialized header shite
+  serlib_buffer_skip(client_send_ser_buffer, SERIALIZED_HDR_SIZE);
+  serialized_header_t* serialized_header;
+  serialized_header->rpc_proc_id = MULTIPLY_ID;
+  serialized_header->payload_size = 0;
+
   serlib_serialize_data_string(client_send_ser_buffer, (char*)&a, sizeof(int));
   serlib_serialize_data_string(client_send_ser_buffer, (char*)&b, sizeof(int));
+
+  // now that we have payload size
+  // resume serialized header shite
+  serialized_header->payload_size = serlib_get_buffer_data_size(client_send_ser_buffer - SERIALIZED_HDR_SIZE);
+
+  serlib_copy_in_buffer_by_size(client_send_ser_buff, sizeof(serialized_header->rpc_proc_id), (char*)&serialized_header->rpc_proc_id, 0); 
+  serlib_copy_in_buffer_by_size(client_send_ser_buff, sizeof(serialized_header->payload_size), (char*)&serialized_header->payload_size, sizeof(serialized_header->rpc_proc_id)); 
 
   return client_send_ser_buffer;
 }
 
+/*
+ *
+ *
+ *
+ */
 int multiply_client_stub_unmarshal(ser_buff_t* client_recv_ser_buffer) {
   int res = 0;
 
