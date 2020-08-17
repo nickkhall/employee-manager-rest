@@ -17,9 +17,10 @@ void rpc_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* client_recv_s
 
   dest.sin_family = AF_INET;
   dest.sin_port = htons(RPC_SERVER_PORT);
-  struct hostent* host = (struct hostent*) gethostbyname(RPC_SERVER_IP);
+  struct hostent* host = (struct hostent*) gethostbyname("127.0.0.1");
   
-  dest.sin_addr = *((struct in_addr*) host->h_addr_list);
+  // dest.sin_addr = *((struct in_addr*) host->h_addr_list);
+  memcpy(&dest.sin_addr, host->h_addr_list[0], host->h_length);
   addr_len = sizeof(struct sockaddr);
 
   sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
