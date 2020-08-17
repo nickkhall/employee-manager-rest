@@ -7,40 +7,70 @@
 
 #include "src/headers/common.h"
 #include "src/headers/serialize.h"
+#include "src/headers/sockets.h"
 
 // @TODO: THIS IS A POC FOR LEARNING, WILL REFACTOR LATER
 
 void rpc_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* client_recv_ser_buffer) {
-  struct sockaddr_in dest;
-  int sockfd = 0, rc = 0, recv_size = 0;
-  int addr_len;
-
-  dest.sin_family = AF_INET;
-  dest.sin_port = htons(RPC_SERVER_PORT);
-  struct hostent* host = (struct hostent*) gethostbyname("127.0.0.1");
-  
-  // dest.sin_addr = *((struct in_addr*) host->h_addr_list);
-  memcpy(&dest.sin_addr, host->h_addr_list[0], host->h_length);
-  addr_len = sizeof(struct sockaddr);
-
-  sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-  if (sockfd == -1) {
-    printf("ERROR:: Socket creation failed...\n");
+  int* sockfd = socklib_socket_create();
+  if (*sockfd == -1) {
+    printf("ERROR:: REST - Socket creation failed...\n");
     return;
   }
 
-  rc = sendto(sockfd, client_send_ser_buffer->buffer,
-              serlib_get_buffer_data_size(client_send_ser_buffer),
-              0, (struct sockaddr*) &dest,
-              sizeof(struct sockaddr));
+  struct sockaddr_in* dest = socklib_socket_build_sock_addr_in(sockfd, AF_INET, RPC_SERVER_PORT);
+  if (dest == NULL) {
+    printf("ERROR:: REST - Failed to assign socket address in rpc_send_recv\n");
+    free(sockfd);
+    free(dest);
+    return;
+  }
+
+  int rc = 0;
+  int recv_size = 0;
+  int addr_len = sizeof(struct sockaddr);
+
+  //struct sockaddr_in dest;
+  //int sockfd = 0, rc = 0, recv_size = 0;
+  //int addr_len;
+
+  //dest.sin_family = AF_INET;
+  //dest.sin_port = htons(RPC_SERVER_PORT);
+  //struct hostent* host = (struct hostent*) gethostbyname("127.0.0.1");
+  //
+  //// dest.sin_addr = *((struct in_addr*) host->h_addr_list);
+  //memcpy(&dest.sin_addr, host->h_addr_list[0], host->h_length);
+  //addr_len = sizeof(struct sockaddr);
+
+  //sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  //if (sockfd == -1) {
+  //  printf("ERROR:: Socket creation failed...\n");
+  //  return;
+  //}
+  
+  rc = socklib_socket_send_to(sockfd,
+                             client_send_ser_buffer->buffer,
+                             serlib_get_buffer_data_size(client_send_ser_buffer),
+                             0, (struct sockaddr*) dest,
+                             sizeof(struct sockaddr));
+
+  //rc = sendto(sockfd, client_send_ser_buffer->buffer,
+  //            serlib_get_buffer_data_size(client_send_ser_buffer),
+  //            0, (struct sockaddr*) &dest,
+  //            sizeof(struct sockaddr));
 
   printf("%s() : %d bytes sent\n", __FUNCTION__, rc);
 
-  recv_size = recvfrom(sockfd, client_recv_ser_buffer->buffer,
-                       serlib_get_buffer_length(client_recv_ser_buffer),
-                       0, (struct sockaddr*)&dest,
-                       &addr_len);
+  recv_size = socklib_socket_recv_from(sockfd, client_recv_ser_buffer->buffer,
+                                       serlib_get_buffer_length(client_recv_ser_buffer),
+                                       0, (struct sockaddr*)&dest,
+                                       &addr_len);
 
+//  recv_size = recvfrom(sockfd, client_recv_ser_buffer->buffer,
+//                       serlib_get_buffer_length(client_recv_ser_buffer),
+//                       0, (struct sockaddr*)&dest,
+//                       &addr_len);
+//
   printf("%s() : %d bytes recieved\n", __FUNCTION__, recv_size);
 }
 

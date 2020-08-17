@@ -1,7 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <time.h>
 
 #include "headers/serialize.h"
 #include "headers/employee.h"
@@ -105,7 +104,7 @@ int serlib_get_buffer_length(ser_buff_t* b) {
  * -------------------------------------------------------
  */
 int serlib_get_buffer_data_size(ser_buff_t* b) {
-  return b->size;
+  return b->next;
 };
 
 /*
