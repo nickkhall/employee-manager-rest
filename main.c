@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <string.h>
 
 #include "src/headers/common.h"
 #include "src/headers/serialize.h"
@@ -67,7 +68,8 @@ ser_buff_t* multiply_client_stub_marshal(int a, int b) {
     free(client_send_ser_buffer);
     exit(1);
   }
-  ser_header->rpc_proc_id = MULTIPLY_ID;
+
+  ser_header->rpc_proc_id = 55;
   ser_header->payload_size = 0;
 
   serlib_serialize_data_string(client_send_ser_buffer, (char*)&a, sizeof(int));
@@ -77,8 +79,15 @@ ser_buff_t* multiply_client_stub_marshal(int a, int b) {
   // resume serialized header shite
   ser_header->payload_size = serlib_get_buffer_data_size(client_send_ser_buffer) - SERIALIZED_HDR_SIZE;
 
-  serlib_copy_in_buffer_by_size(client_send_ser_buffer, sizeof(ser_header->rpc_proc_id), (char*)&ser_header->rpc_proc_id, 0); 
-  serlib_copy_in_buffer_by_size(client_send_ser_buffer, sizeof(ser_header->payload_size), (char*)&ser_header->payload_size, sizeof(ser_header->rpc_proc_id)); 
+  serlib_copy_in_buffer_by_size(client_send_ser_buffer,
+                                sizeof(ser_header->rpc_proc_id),
+                                (char*)&ser_header->rpc_proc_id,
+                                0); 
+
+  serlib_copy_in_buffer_by_size(client_send_ser_buffer,
+                                sizeof(ser_header->payload_size),
+                                (char*)&ser_header->payload_size,
+                                sizeof(ser_header->rpc_proc_id)); 
 
   return client_send_ser_buffer;
 }
