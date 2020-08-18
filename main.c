@@ -69,9 +69,9 @@ ser_buff_t* multiply_client_stub_marshal(int a, int b) {
     exit(1);
   }
 
-  ser_header->tid = 0;
+  ser_header->tid = 10;
   ser_header->rpc_proc_id = 55;
-  ser_header->msg_type = 0;
+  ser_header->msg_type = 3;
   ser_header->payload_size = 0;
 
   serlib_serialize_data_string(client_send_ser_buffer, (char*)&a, sizeof(int));
