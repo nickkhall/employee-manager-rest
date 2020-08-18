@@ -111,7 +111,7 @@ int serlib_get_buffer_data_size(ser_buff_t* b);
  * 
  * -----------------------------------------------------
  */
-void serlib_copy_in_buffer_by_size(ser_buff_t* client_send_ser_buffer, int size, char* value, int offset);
+void serlib_copy_in_buffer_by_offset(ser_buff_t* client_send_ser_buffer, int size, char* value, int offset);
 
 /*
  * --------------------------------------------

@@ -125,14 +125,14 @@ int serlib_get_buffer_data_size(ser_buff_t* b) {
 
 /*
  * -----------------------------------------------------
- * function: serlib_copy_in_buffer_by_size
+ * function: serlib_copy_in_buffer_by_offset
  * -----------------------------------------------------
  * params  : b - ser_buff_t*
  * -----------------------------------------------------
  * 
  * -----------------------------------------------------
  */
-void serlib_copy_in_buffer_by_size(ser_buff_t* client_send_ser_buffer, int size, char* value, int offset) {
+void serlib_copy_in_buffer_by_offset(ser_buff_t* client_send_ser_buffer, int size, char* value, int offset) {
   if (offset > client_send_ser_buffer->size) {
     printf("%s(): ERROR:: REST - Attempted to write outside of buffer limits\n", __FUNCTION__);
     return;

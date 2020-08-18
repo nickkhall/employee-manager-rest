@@ -69,7 +69,9 @@ ser_buff_t* multiply_client_stub_marshal(int a, int b) {
     exit(1);
   }
 
+  ser_header->tid = 0;
   ser_header->rpc_proc_id = 55;
+  ser_header->msg_type = 0;
   ser_header->payload_size = 0;
 
   serlib_serialize_data_string(client_send_ser_buffer, (char*)&a, sizeof(int));
@@ -79,15 +81,27 @@ ser_buff_t* multiply_client_stub_marshal(int a, int b) {
   // resume serialized header shite
   ser_header->payload_size = serlib_get_buffer_data_size(client_send_ser_buffer) - SERIALIZED_HDR_SIZE;
 
-  serlib_copy_in_buffer_by_size(client_send_ser_buffer,
-                                sizeof(ser_header->rpc_proc_id),
-                                (char*)&ser_header->rpc_proc_id,
+  serlib_copy_in_buffer_by_offset(client_send_ser_buffer,
+                                sizeof(ser_header->tid),
+                                (char*)&ser_header->tid,
                                 0); 
 
-  serlib_copy_in_buffer_by_size(client_send_ser_buffer,
+  serlib_copy_in_buffer_by_offset(client_send_ser_buffer,
+                                sizeof(ser_header->rpc_proc_id),
+                                (char*)&ser_header->rpc_proc_id,
+                                sizeof(ser_header->tid)); 
+
+  serlib_copy_in_buffer_by_offset(client_send_ser_buffer,
+                                sizeof(ser_header->msg_type),
+                                (char*)&ser_header->msg_type,
+                                sizeof(ser_header->tid) + sizeof(ser_header->rpc_proc_id)); 
+
+  serlib_copy_in_buffer_by_offset(client_send_ser_buffer,
                                 sizeof(ser_header->payload_size),
                                 (char*)&ser_header->payload_size,
-                                sizeof(ser_header->rpc_proc_id)); 
+                                (sizeof(ser_header->msg_type)
+                                + sizeof(ser_header->tid)
+                                + sizeof(ser_header->rpc_proc_id))); 
 
   return client_send_ser_buffer;
 }
