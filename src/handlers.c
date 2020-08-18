@@ -45,7 +45,7 @@ employee_t* get_employee(char* id) {
   // return response (employee_t)
 };
 
-void rpc_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* client_recv_ser_buffer) {
+void empman_rest_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* client_recv_ser_buffer) {
   int* sockfd = socklib_socket_create();
   if (*sockfd == -1) {
     printf("ERROR:: REST - Socket creation failed...\n");
@@ -54,7 +54,7 @@ void rpc_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* client_recv_s
 
   struct sockaddr_in* dest = socklib_socket_build_sock_addr_in(sockfd, AF_INET, RPC_SERVER_PORT);
   if (dest == NULL) {
-    printf("ERROR:: REST - Failed to assign socket address in rpc_send_recv\n");
+    printf("ERROR:: REST - Failed to assign socket address in empman_rest_send_recv\n");
     free(sockfd);
     free(dest);
     return;
@@ -85,7 +85,7 @@ void rpc_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* client_recv_s
  *
  *
  */
-ser_buff_t* multiply_client_stub_marshal(int a, int b) {
+ser_buff_t* empman_rest_serialize_multiply(int a, int b) {
   ser_buff_t* client_send_ser_buffer = NULL;
   serlib_init_buffer_of_size(&client_send_ser_buffer, MAX_RECV_SEND_BUFF_SIZE);
 
@@ -142,7 +142,7 @@ ser_buff_t* multiply_client_stub_marshal(int a, int b) {
  *
  *
  */
-int multiply_client_stub_unmarshal(ser_buff_t* client_recv_ser_buffer) {
+int empman_rest_deserialize_multiply(ser_buff_t* client_recv_ser_buffer) {
   int res = 0;
 
   serlib_deserialize_data_string((char*)&res, client_recv_ser_buffer, sizeof(int));
@@ -150,25 +150,25 @@ int multiply_client_stub_unmarshal(ser_buff_t* client_recv_ser_buffer) {
   return res;
 }
 
-void init_rpc_infra() {
+void empman_rest_init() {
   
 }
 
 
-int multiply_rpc(int a, int b) {
-  init_rpc_infra();
+int empman_rest_handlers_multiply(int a, int b) {
+  empman_rest_init();
 
-  ser_buff_t* client_send_ser_buffer = multiply_client_stub_marshal(a, b);
+  ser_buff_t* client_send_ser_buffer = empman_rest_serialize_multiply(a, b);
   ser_buff_t* client_recv_ser_buffer = NULL;
 
   serlib_init_buffer_of_size(&client_recv_ser_buffer, MAX_RECV_SEND_BUFF_SIZE);
 
-  rpc_send_recv(client_send_ser_buffer, client_recv_ser_buffer);
+  empman_rest_send_recv(client_send_ser_buffer, client_recv_ser_buffer);
   
   serlib_free_buffer(client_send_ser_buffer);
   client_send_ser_buffer = NULL;
 
-  int res = multiply_client_stub_unmarshal(client_recv_ser_buffer);
+  int res = empman_rest_deserialize_multiply(client_recv_ser_buffer);
 
   serlib_free_buffer(client_recv_ser_buffer);
 

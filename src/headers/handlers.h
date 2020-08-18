@@ -15,15 +15,16 @@
  */
 employee_t* get_employee(char* id);
 
-void rpc_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* client_recv_ser_buffer);
+void empman_rest_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* client_recv_ser_buffer);
 
-ser_buff_t* multiply_client_stub_marshal(int a, int b);
 
-int multiply_client_stub_unmarshal(ser_buff_t* client_recv_ser_buffer);
+ser_buff_t* empman_rest_serialize_multiply(int a, int b);
 
-void init_rpc_infra();
+int empman_rest_deserialize_multiply(ser_buff_t* client_recv_ser_buffer);
 
-int multiply_rpc(int a, int b);
+void empman_rest_init();
+
+int empman_rest_handlers_multiply(int a, int b);
 
 #endif
 

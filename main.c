@@ -7,12 +7,12 @@ int main(int argc, char** argv) {
   int b = 10;
   int c = 5;
 
-  printf("Calling `multiply_rpc` with a: %d, b: %d\n", a, b);
-  int res = multiply_rpc(a, b);
+  printf("Calling `empman_rest_handlers_multiply` with a: %d, b: %d\n", a, b);
+  int res = empman_rest_handlers_multiply(a, b);
   printf("CLIENT - RPC RESPONSE: res = %d\n", res);
   
-  printf("Calling `multiply_rpc` with a: %d, b: %d\n", c, a);
-  int res_two = multiply_rpc(c, a);
+  printf("Calling `empman_rest_handlers_multiply` with a: %d, b: %d\n", c, a);
+  int res_two = empman_rest_handlers_multiply(c, a);
   printf("CLIENT - RPC RESPONSE: res_two = %d\n", res_two);
 
   return 0;
