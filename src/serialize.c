@@ -1,7 +1,7 @@
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <time.h>
 
 #include "headers/serialize.h"
 #include "headers/employee.h"
@@ -43,6 +43,21 @@ void serlib_init_buffer_of_size(ser_buff_t** b, int size) {
   (*b)->buffer = calloc(1, size);
   (*b)->size = size;
   (*b)->next = 0;
+};
+
+/*
+ * ------------------------------------------------------
+ * function: serlib_get_header_size
+ * ------------------------------------------------------
+ * Returns size of serialized header.
+ * ------------------------------------------------------
+ */
+unsigned int serlib_get_header_size(void) {
+  ser_header_t ser_header;
+  return sizeof(ser_header.tid)
+         + sizeof(ser_header.rpc_proc_id)
+         + sizeof(ser_header.msg_type)
+         + sizeof(ser_header.payload_size);
 };
 
 /*
@@ -105,7 +120,25 @@ int serlib_get_buffer_length(ser_buff_t* b) {
  * -------------------------------------------------------
  */
 int serlib_get_buffer_data_size(ser_buff_t* b) {
-  return b->size;
+  return b->next;
+};
+
+/*
+ * -----------------------------------------------------
+ * function: serlib_copy_in_buffer_by_offset
+ * -----------------------------------------------------
+ * params  : b - ser_buff_t*
+ * -----------------------------------------------------
+ * 
+ * -----------------------------------------------------
+ */
+void serlib_copy_in_buffer_by_offset(ser_buff_t* client_send_ser_buffer, int size, char* value, int offset) {
+  if (offset > client_send_ser_buffer->size) {
+    printf("%s(): ERROR:: REST - Attempted to write outside of buffer limits\n", __FUNCTION__);
+    return;
+  }
+
+  memcpy(client_send_ser_buffer->buffer + offset, value, size);
 };
 
 /*

@@ -1,6 +1,8 @@
 #ifndef __EMP_MAN_EMPLOYEE_H__
 #define __EMP_MAN_EMPLOYEE_H__
 
+#include <time.h>
+
 typedef struct employee_t {
   char id[33];
   char first[51];
