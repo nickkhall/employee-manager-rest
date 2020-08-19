@@ -12,38 +12,7 @@
 #include "headers/sockets.h"
 
 #define MULTIPLY_ID 55
-
-/*
- * -------------------------------------------------------------
- *
- * -------------------------------------------------------------
- *
- * -------------------------------------------------------------
- *
- * -------------------------------------------------------------
- */
-employee_t* get_employee(char* id) {
-  // any rpc init functionality ??
-  
-  // initialize send serialized buffer's 
-  // declare recv serialized buffer (NULL)
-
-  // serialize id data
-
-  // initialize recv buffer
-  
-  // send and receive data
-
-  // free send buffer
-
-  // reset send buffer (NULL)
-
-  // deserialize response (recv_buffer)
-
-  // free recv_buffer
-
-  // return response (employee_t)
-};
+#define EMP_MAN_GET_EMP_ID 0
 
 void empman_rest_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* client_recv_ser_buffer) {
   int* sockfd = socklib_socket_create();
@@ -81,11 +50,51 @@ void empman_rest_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* clien
 }
 
 /*
+ * -------------------------------------------------------------
+ *
+ * -------------------------------------------------------------
+ *
+ * -------------------------------------------------------------
+ *
+ * -------------------------------------------------------------
+ */
+employee_t* empman_rest_handlers_employees_get_id(char* id) {
+  // any rpc init functionality ??
+  empman_rest_init();
+
+  // initialize send serialized buffer's 
+  ser_buff_t* client_send_ser_buffer = empman_rest_serialize_employees_get_id(id);
+  // declare recv serialized buffer (NULL)
+  ser_buff_t* client_recv_ser_buffer = NULL;
+
+  // initialize recv serialized buffer
+  serlib_init_buffer_of_size(&client_recv_ser_buffer, MAX_RECV_SEND_BUFF_SIZE);
+
+  // send and receive data
+  empman_rest_send_recv(client_send_ser_buffer, client_recv_ser_buffer);
+  
+  // free send buffer
+  serlib_free_buffer(client_send_ser_buffer);
+  // reset send buffer (NULL)
+  client_send_ser_buffer = NULL;
+
+  // deserialize response (recv_buffer)
+  employee_t* response = empman_rest_deserialize_employees_get_id(client_recv_ser_buffer);
+  
+
+  // free recv_buffer
+  serlib_free_buffer(client_recv_ser_buffer);
+
+  // return response (employee_t)
+  return response;
+};
+
+/*
  *
  *
  *
  */
-ser_buff_t* empman_rest_serialize_multiply(int a, int b) {
+ser_buff_t* empman_rest_serialize_employees_get_id(char* id) {
   ser_buff_t* client_send_ser_buffer = NULL;
   serlib_init_buffer_of_size(&client_send_ser_buffer, MAX_RECV_SEND_BUFF_SIZE);
 
@@ -105,8 +114,7 @@ ser_buff_t* empman_rest_serialize_multiply(int a, int b) {
   ser_header->msg_type = 3;
   ser_header->payload_size = 0;
 
-  serlib_serialize_data_string(client_send_ser_buffer, (char*)&a, sizeof(int));
-  serlib_serialize_data_string(client_send_ser_buffer, (char*)&b, sizeof(int));
+  serlib_serialize_data_string(client_send_ser_buffer, (char*)&id, sizeof(int));
 
   // now that we have payload size
   // resume serialized header shite
@@ -137,17 +145,9 @@ ser_buff_t* empman_rest_serialize_multiply(int a, int b) {
   return client_send_ser_buffer;
 }
 
-/*
- *
- *
- *
- */
-int empman_rest_deserialize_multiply(ser_buff_t* client_recv_ser_buffer) {
-  int res = 0;
-
-  serlib_deserialize_data_string((char*)&res, client_recv_ser_buffer, sizeof(int));
-
-  return res;
+employee_t* empman_rest_deserialize_employees_get_id(ser_buff_t* client_recv_ser_buffer) {
+  // query db for employee data
+  serlib_deserialize_employee_t(client_recv_ser_buffer);
 }
 
 void empman_rest_init() {
@@ -155,23 +155,23 @@ void empman_rest_init() {
 }
 
 
-int empman_rest_handlers_multiply(int a, int b) {
-  empman_rest_init();
-
-  ser_buff_t* client_send_ser_buffer = empman_rest_serialize_multiply(a, b);
-  ser_buff_t* client_recv_ser_buffer = NULL;
-
-  serlib_init_buffer_of_size(&client_recv_ser_buffer, MAX_RECV_SEND_BUFF_SIZE);
-
-  empman_rest_send_recv(client_send_ser_buffer, client_recv_ser_buffer);
-  
-  serlib_free_buffer(client_send_ser_buffer);
-  client_send_ser_buffer = NULL;
-
-  int res = empman_rest_deserialize_multiply(client_recv_ser_buffer);
-
-  serlib_free_buffer(client_recv_ser_buffer);
-
-  return res;
-}
+//int empman_rest_handlers_multiply(int a, int b) {
+//  empman_rest_init();
+//
+//  ser_buff_t* client_send_ser_buffer = empman_rest_serialize_employees_get_id(a, b);
+//  ser_buff_t* client_recv_ser_buffer = NULL;
+//
+//  serlib_init_buffer_of_size(&client_recv_ser_buffer, MAX_RECV_SEND_BUFF_SIZE);
+//
+//  empman_rest_send_recv(client_send_ser_buffer, client_recv_ser_buffer);
+//  
+//  serlib_free_buffer(client_send_ser_buffer);
+//  client_send_ser_buffer = NULL;
+//
+//  int res = empman_rest_deserialize_multiply(client_recv_ser_buffer);
+//
+//  serlib_free_buffer(client_recv_ser_buffer);
+//
+//  return res;
+//}
 
