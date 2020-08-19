@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <stdio.h>
 
 #include "src/headers/handlers.h"
@@ -16,7 +17,15 @@ int main(int argc, char** argv) {
   //int res_two = empman_rest_handlers_multiply(c, a);
   //printf("CLIENT - RPC RESPONSE: res_two = %d\n", res_two);
   
-  employee_t* employee = empman_rest_handlers_employees_get_id("nick");
+  char* id = (char*) malloc(sizeof(char) * 33); 
+  *id = 'n';
+  *(id + 1) = 'i';
+  *(id + 2) = 'c';
+  *(id + 3) = 'k';
+
+  employee_t* employee = empman_rest_handlers_employees_get_id(id);
+
+  free(id);
 
   return 0;
 }

@@ -114,7 +114,7 @@ ser_buff_t* empman_rest_serialize_employees_get_id(char* id) {
   ser_header->msg_type = 3;
   ser_header->payload_size = 0;
 
-  serlib_serialize_data_string(client_send_ser_buffer, (char*)&id, sizeof(int));
+  serlib_serialize_data_string(client_send_ser_buffer, id, sizeof(int));
 
   // now that we have payload size
   // resume serialized header shite
