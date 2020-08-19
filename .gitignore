@@ -53,3 +53,4 @@ dkms.conf
 *.swp
 debug/
 bin/
+notes/
