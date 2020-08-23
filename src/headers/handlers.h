@@ -2,6 +2,7 @@
 #define __EMP_MAN_REST_HANDERS__
 
 #include "serialize.h"
+#include "employee.h"
 
 /*
  * -------------------------------------------------------------

@@ -15,18 +15,28 @@
  * Initializes the serialized buffer type.
  * ------------------------------------------------------
  */
-void serlib_init_buffer(ser_buff_t** b) {
+void serlib_init_buffer(ser_buff_t* b) {
   // create memory for serialized buffer type
-  (*b) = (ser_buff_t*) calloc(1, sizeof(ser_buff_t));
+  b = (ser_buff_t*) malloc(sizeof(ser_buff_t));
+  if (!b) {
+    printf("ERROR:: REST - Failed to allocate memory for ser buffer in serlib_init_buffer\n");
+    // @TODO : create clean up function for app, memory, etc.
+    exit(1);
+  }
 
   // create memory for serialized buffer's buffer
-  (*b)->buffer = calloc(1, SERIALIZE_BUFFER_DEFAULT_SIZE);
+  b->buffer = malloc(SERIALIZE_BUFFER_DEFAULT_SIZE);
+  if (!b->buffer) {
+    printf("ERROR:: REST - Failed to allocate memory for ser buffer's buffer in serlib_init_buffer\n");
+    // @TODO : create clean up function for app, memory, etc.
+    exit(1);
+  }
 
   // set buffer size to default size
-  (*b)->size = SERIALIZE_BUFFER_DEFAULT_SIZE;
+  b->size = SERIALIZE_BUFFER_DEFAULT_SIZE;
 
   // set buffer's next segment
-  (*b)->next = 0;
+  b->next = 0;
 };
 
 /*
@@ -39,8 +49,24 @@ void serlib_init_buffer(ser_buff_t** b) {
  * ------------------------------------------------------
  */
 void serlib_init_buffer_of_size(ser_buff_t** b, int size) {
-  (*b) = (ser_buff_t*) calloc(1, sizeof(ser_buff_t));
-  (*b)->buffer = calloc(1, size);
+  if (!size) {
+    printf("ERROR:: REST - No size for serialized buffer in serlib_init_buffer_of_size\n");
+    free(*b);
+    exit(1);
+  }
+  (*b) = (ser_buff_t*) malloc(sizeof(ser_buff_t));
+  if (!(*b)) {
+    printf("ERROR:: REST - Failed to allocate memory for ser buffer in serlib_init_buffer_of_size\n");
+    // @TODO : create clean up function for app, memory, etc.
+    exit(1);
+  }
+
+  (*b)->buffer = malloc(size);
+  if (!(*b)->buffer) {
+    printf("ERROR:: REST - Failed to allocate memory for ser buffer's buffer in serlib_init_buffer_of_size\n");
+    // @TODO : create clean up function for app, memory, etc.
+    exit(1);
+  }
   (*b)->size = size;
   (*b)->next = 0;
 };
@@ -54,10 +80,10 @@ void serlib_init_buffer_of_size(ser_buff_t** b, int size) {
  */
 unsigned int serlib_get_header_size(void) {
   ser_header_t ser_header;
-  return sizeof(ser_header.tid)
+  return (sizeof(ser_header.tid)
          + sizeof(ser_header.rpc_proc_id)
-         + sizeof(ser_header.msg_type)
-         + sizeof(ser_header.payload_size);
+         + sizeof(ser_header.rpc_call_id)
+         + sizeof(ser_header.payload_size));
 };
 
 /*
@@ -93,7 +119,7 @@ void serlib_buffer_skip(ser_buff_t* b, unsigned long int skip_size) {
  * Resets a buffer. (Sets ->next to 0)
  * ---------------------------------------------------
  */
-int serlib_reset_buffer(ser_buff_t* b) {
+void serlib_reset_buffer(ser_buff_t* b) {
   b->next = 0;
 };
 
@@ -157,7 +183,7 @@ void serlib_free_buffer(ser_buff_t* b) {
 
 /*
  * ------------------------------------------------------------------------
- * function: serlib_serialize_data_string
+ * function: serlib_serialize_data
  * ------------------------------------------------------------------------
  * params  : 
  *           > b      - ser_buff_t**
@@ -167,7 +193,7 @@ void serlib_free_buffer(ser_buff_t* b) {
  * Serializes string data to a given valid serialized string buffer.
  * ------------------------------------------------------------------------
  */
-void serlib_serialize_data_string(ser_buff_t* b, char* data, int nbytes) {
+void serlib_serialize_data(ser_buff_t* b, char* data, int nbytes) {
   if (b == NULL) assert(0);
 
   ser_buff_t* buff = (ser_buff_t*)(b);
@@ -213,7 +239,7 @@ void serlib_serialize_data_string(ser_buff_t* b, char* data, int nbytes) {
 
 /*
  * ----------------------------------------------------------------------
- * function: serlib_deserialize_data_string
+ * function: serlib_deserialize_data
  * ----------------------------------------------------------------------
  * params  :
  *         > dest - char*
@@ -223,13 +249,37 @@ void serlib_serialize_data_string(ser_buff_t* b, char* data, int nbytes) {
  * Deserializes a buffers' string buffer.
  * ----------------------------------------------------------------------
  */
-void serlib_deserialize_data_string(char* dest, ser_buff_t* b, int size) {
+void serlib_deserialize_data(ser_buff_t* b, char* dest, int size) {
   if (!b || !b->buffer) assert(0);
   if (!size) return;
   if ((b->size - b->next) < size) assert(0);
 
   // copy data from dest to string buffer
   memcpy(dest, b->buffer + b->next, size);
+
+  // increment the buffer's next pointer
+  b->next += size;
+};
+
+/*
+ * ----------------------------------------------------------------------
+ * function: serlib_deserialize_data_int
+ * ----------------------------------------------------------------------
+ * params  :
+ *         > dest - int*
+ *         > b    - ser_buff_t*
+ *         > size - int
+ * ----------------------------------------------------------------------
+ * Deserializes a buffers' string buffer for an integer.
+ * ----------------------------------------------------------------------
+ */
+void serlib_deserialize_data_int(ser_buff_t* b, int* dest, int size) {
+  if (!b || !b->buffer) assert(0);
+  if (!size) return;
+  if ((b->size - b->next) < size) assert(0);
+
+  // copy data from dest to string buffer
+  memcpy(dest, (int*)b->buffer + b->next, size);
 
   // increment the buffer's next pointer
   b->next += size;
@@ -261,25 +311,25 @@ void serlib_deserialize_data_time_t(time_t* dest, ser_buff_t*b, int size) {
 
 /*
  * ----------------------------------------------------------------------
- * function: serlib_list_t
+ * function: serlib_serialize_list_t
  * ----------------------------------------------------------------------
  * params  : b - ser_buff_t*
  * ----------------------------------------------------------------------
  * Deserializes a buffers' employee_t buffer.
  * ----------------------------------------------------------------------
  */
-void serlib_list_t(list_t* list,
+void serlib_serialize_list_t(list_t* list,
                              ser_buff_t* b,
-                             void(*serialize_fn_ptr)(void*, ser_buff_t* b))
+                             void (* serialize_fn_ptr)(void *, ser_buff_t*))
 {
   // if this is a sentinel section, return null
   if (!list) {
     unsigned int sentinel = 0xFFFFFFFF;
-    serlib_serialize_data_string(b, (char*)&sentinel, sizeof(unsigned int));
+    serlib_serialize_data(b, (char*)&sentinel, sizeof(unsigned int));
     return;
   }
 
-  serlib_list_node_t(list->head, b, serialize_fn_ptr);
+  serlib_serialize_list_node_t(list->head, b, serialize_fn_ptr);
 };
 
 /*
@@ -291,12 +341,12 @@ void serlib_list_t(list_t* list,
  * Deserializes a employee list.
  * ----------------------------------------------------------------------
  */
-list_t* serlib_deserialize_list_t(ser_buff_t* b) {
+list_t* serlib_deserialize_list_t(ser_buff_t* b, void (*serialize_fn_ptr)(void *, ser_buff_t*)) {
   // set sentintal to default
   unsigned int sentinel = 0;
 
   // unmarshall buffer to check for sentinel
-  serlib_serialize_data_string(b, (char*)&sentinel,  sizeof(unsigned long int));
+  serlib_serialize_data(b, (char*)&sentinel,  sizeof(unsigned long int));
 
   // if this is a sentinel section, return null
   if (sentinel == 0xFFFFFFFF) {
@@ -304,32 +354,34 @@ list_t* serlib_deserialize_list_t(ser_buff_t* b) {
   }
 
   list_t* list = calloc(1, sizeof(list_t));
-  list->head = serlib_deserialize_list_node_t(b);
+  list->head = serlib_deserialize_list_node_t(b, serialize_fn_ptr);
 
   return list;
 };
 
 /*
  * ----------------------------------------------------------------------
- * function: serlib_list_node_t
+ * function: serlib_serialize_list_node_t
  * ----------------------------------------------------------------------
  * params  : b - ser_buff_t*
  * ----------------------------------------------------------------------
  * Serializes a employee list node.
  * ----------------------------------------------------------------------
  */
-void serlib_list_node_t(list_node_t* list_node, ser_buff_t* b, void (*serialize_fn_ptr)(void*, ser_buff_t* b)) {
+void serlib_serialize_list_node_t(list_node_t* list_node, ser_buff_t* b, void (*serialize_fn_ptr)(void*, ser_buff_t*))
+{
   // if this is a sentinel section, return null
   if (!list_node) {
     unsigned int sentinel = 0xFFFFFFFF;
-    serlib_serialize_data_string(b, (char*)&sentinel, sizeof(unsigned int));
+    serlib_serialize_data(b, (char*)&sentinel, sizeof(unsigned int));
     return;
   }
 
   serialize_fn_ptr(list_node->data, b);
-  serlib_list_node_t(list_node->next, b, serialize_fn_ptr);
+  serlib_serialize_list_node_t(list_node->next, b, serialize_fn_ptr);
 };
 
+// THIS IS WRONG, IT WAS HW ASSIGNMENT, NOT IN COURSE, FIND THE SOLUTION
 /*
  * ----------------------------------------------------------------------
  * function: serlib_deserialize_list_node_t
@@ -339,12 +391,12 @@ void serlib_list_node_t(list_node_t* list_node, ser_buff_t* b, void (*serialize_
  * Deserializes a employee list node.
  * ----------------------------------------------------------------------
  */
-list_node_t* serlib_deserialize_list_node_t(ser_buff_t* b) {
+list_node_t* serlib_deserialize_list_node_t(ser_buff_t* b, void (*serialize_fn_ptr)(void *, ser_buff_t*)) {
   // set sentintal to default
   unsigned int sentinel = 0;
 
   // unmarshall buffer to check for sentinel
-  serlib_serialize_data_string(b, (char*)&sentinel, sizeof(unsigned int));
+  serlib_serialize_data(b, (char*)&sentinel, sizeof(unsigned int));
 
   // if this is a sentinel section, return null
   if (sentinel == 0xFFFFFFFF) {
@@ -353,117 +405,9 @@ list_node_t* serlib_deserialize_list_node_t(ser_buff_t* b) {
 
   list_node_t* list_node = calloc(1, sizeof(list_node_t));
   
-  list_node->data = serlib_deserialize_employee_t(b);
-  list_node->next = serlib_deserialize_list_node_t(b);
+  serialize_fn_ptr(list_node->data, b);
+  list_node->next = serlib_deserialize_list_node_t(b, serialize_fn_ptr);
 
   return list_node;
-};
-
-/*
- * +--------------------------------------+
- * |          Generic Wrappers            |
- * +--------------------------------------+
- */
-
-/*
- * ----------------------------------------------------------------------
- * function: serlib_serialize_employee_t_wrapper
- * ----------------------------------------------------------------------
- * params  : 
- *         > obj - void*
- *         > b   - ser_buff_t*
- * ----------------------------------------------------------------------
- * Generic wrapper function for serializing an employee.
- * ----------------------------------------------------------------------
- */
-void serlib_serialize_employee_t_wrapper(void* obj, ser_buff_t* b) {
-  serlib_serialize_employee_t(obj, b);
-};
-
-/*
- * +--------------------------------------+
- * |          Employee Specific           |
- * +--------------------------------------+
- */
-
-/*
- * ----------------------------------------------------------------------
- * function: serlib_employee_t
- * ----------------------------------------------------------------------
- * params  : b - ser_buff_t*
- * ----------------------------------------------------------------------
- * Serializes an employee.
- * ----------------------------------------------------------------------
- */
-void serlib_serialize_employee_t(employee_t* employee, ser_buff_t* b) {
-  // if this is a sentinel section, return null
-  unsigned int sentinel = 0xFFFFFFFF;
-  if (!employee) {
-    serlib_serialize_data_string(b, (char*)&sentinel, sizeof(unsigned int));
-    return;
-  }
-
-  serlib_serialize_data_string(b, (char*)employee->id,        sizeof(char) * 33);
-  serlib_serialize_data_string(b, (char*)employee->first,     sizeof(char) * 51);
-  serlib_serialize_data_string(b, (char*)employee->last,      sizeof(char) * 51);
-  serlib_serialize_data_string(b, (char*)employee->email,     sizeof(char) * 101);
-  serlib_serialize_data_string(b, (char*)employee->address,   sizeof(char) * 76);
-  serlib_serialize_data_string(b, (char*)employee->phone,     sizeof(char) * 51);
-  serlib_serialize_data_string(b, (char*)employee->start,     sizeof(time_t));
-  serlib_serialize_data_string(b, (char*)employee->gender,    sizeof(char) * 7);
-  serlib_serialize_data_string(b, (char*)employee->ethnicity, sizeof(char) * 51);
-  serlib_serialize_data_string(b, (char*)employee->title,     sizeof(char) * 51);
-
-  if (employee->salary) {
-    serlib_serialize_data_string(b, (char*)employee->salary, sizeof(int));
-  } else {
-    serlib_serialize_data_string(b, (char*)&sentinel, sizeof(unsigned long int));
-  }
-};
-
-/*
- * ----------------------------------------------------------------------
- * function: serlib_deserialize_employee_t
- * ----------------------------------------------------------------------
- * params  : b - ser_buff_t*
- * ----------------------------------------------------------------------
- * Deserializes an employee.
- * ----------------------------------------------------------------------
- */
-employee_t* serlib_deserialize_employee_t(ser_buff_t* b) {
-  unsigned int sentinel = 0;
-
-  serlib_serialize_data_string(b, (char*)&sentinel, sizeof(unsigned int));
-
-  if (sentinel == 0xFFFFFFFF) {
-    return NULL;
-  }
-
-  serlib_buffer_skip(b, -1 * sizeof(unsigned long int));
-
-  employee_t* employee = calloc(1, sizeof(employee_t));
-
-  serlib_serialize_data_string(b, (char*)employee->id,        sizeof(char) * 33);
-  serlib_serialize_data_string(b, (char*)employee->first,     sizeof(char) * 51);
-  serlib_serialize_data_string(b, (char*)employee->last,      sizeof(char) * 51);
-  serlib_serialize_data_string(b, (char*)employee->email,     sizeof(char) * 101);
-  serlib_serialize_data_string(b, (char*)employee->address,   sizeof(char) * 76);
-  serlib_serialize_data_string(b, (char*)employee->phone,     sizeof(char) * 51);
-  serlib_serialize_data_string(b, (char*)employee->start,     sizeof(time_t));
-  serlib_serialize_data_string(b, (char*)employee->gender,    sizeof(char) * 7);
-  serlib_serialize_data_string(b, (char*)employee->ethnicity, sizeof(char) * 51);
-  serlib_serialize_data_string(b, (char*)employee->title,     sizeof(char) * 51);
-
-  serlib_serialize_data_string(b, (char*)&sentinel, sizeof(int));
-
-  if (sentinel == 0xFFFFFFFF) {
-    employee->salary = NULL;
-  } else {
-    serlib_buffer_skip(b, -1 * sizeof(unsigned long int));
-    employee->salary = calloc(1, sizeof(int));
-    serlib_serialize_data_string(b, (char*) employee->salary, sizeof(int));
-  }
-
-  return employee;
 };
 
