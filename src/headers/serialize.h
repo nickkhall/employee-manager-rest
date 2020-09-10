@@ -1,5 +1,5 @@
-#ifndef __EMP_MAN_REST_SERIALIZE_H__
-#define __EMP_MAN_REST_SERIALIZE_H__
+#ifndef __SERLIB_SERIALIZE_H__
+#define __SERLIB_SERIALIZE_H__
 
 #define SERIALIZE_BUFFER_DEFAULT_SIZE 100
 
@@ -33,6 +33,11 @@ typedef struct _ser_header_t {
   unsigned int payload_size;
 } ser_header_t;
 
+typedef struct _client_param_t {
+  unsigned int recv_buff_size;
+  ser_buff_t*  recv_ser_b;
+} client_param_t;
+
 /*
  * ------------------------------------------------------
  * function: serlib_init_buffer
@@ -57,12 +62,21 @@ void serlib_init_buffer_of_size(ser_buff_t** b, int size);
 
 /*
  * ------------------------------------------------------
- * function: serlib_get_header_size
+ * function: serlib_header_get_size
  * ------------------------------------------------------
  * Returns size of serialized header.
  * ------------------------------------------------------
  */
-unsigned int serlib_get_header_size(void);
+unsigned int serlib_header_get_size(void);
+
+/*
+ * ------------------------------------------------------
+ * function: serlib_header_init
+ * ------------------------------------------------------
+ * Returns size of serialized header.
+ * ------------------------------------------------------
+ */
+ser_header_t* serlib_header_init(int tid, int rpc_proc_id, int rpc_call_id, int payload_size);
 
 /*
  * --------------------------------------------------------------------
@@ -212,15 +226,17 @@ void serlib_serialize_list_t(list_t* list,
                              void (* serialize_fn_ptr)(void *, ser_buff_t*));
 
 /*
- * ----------------------------------------------------------------------
+ * ------------------------------------------------------------------------------
  * function: serlib_deserialize_list_t
- * ----------------------------------------------------------------------
- * params  : b - ser_buff_t*
- * ----------------------------------------------------------------------
- * Deserializes a list.
- * ----------------------------------------------------------------------
+ * ------------------------------------------------------------------------------
+ * params  :
+ *         > b                - ser_buff_t*
+ *         > serialize_fn_ptr - function pointer to function (void*, ser_buff_t*)
+ * ------------------------------------------------------------------------------
+ * Deserializes a employee list.
+ * ------------------------------------------------------------------------------
  */
-list_t* serlib_deserialize_list_t(ser_buff_t* b, void (*serialize_fn_ptr)(void *, ser_buff_t*));
+void serlib_deserialize_list_t(ser_buff_t* b, void (*serialize_fn_ptr)(void *, ser_buff_t*));
 
 /*
  * ----------------------------------------------------------------------
@@ -245,4 +261,3 @@ void serlib_serialize_list_node_t(list_node_t* list_node, ser_buff_t* b, void (*
 list_node_t* serlib_deserialize_list_node_t(ser_buff_t* b, void (*serialize_fn_ptr)(void *, ser_buff_t*));
 
 #endif
-
