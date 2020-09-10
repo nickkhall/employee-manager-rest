@@ -98,7 +98,8 @@ employee_t* empman_rest_handlers_employees_get_id(char* id) {
  * Deserializes an employee.
  * ----------------------------------------------------------------------
  */
-employee_t* empman_rest_deserialize_employee_t(employee_t* employee, ser_buff_t* b) {
+employee_t* empman_rest_deserialize_employee_t(ser_buff_t* b) {
+  employee_t* employee = (employee_t*) malloc(sizeof(employee_t));
   unsigned int sentinel = 0;
 
   serlib_serialize_data(b, (char*)&sentinel, sizeof(unsigned int));
@@ -108,8 +109,6 @@ employee_t* empman_rest_deserialize_employee_t(employee_t* employee, ser_buff_t*
   }
 
   serlib_buffer_skip(b, -1 * sizeof(unsigned long int));
-
-  employee = malloc(sizeof(employee_t));
 
   serlib_serialize_data(b, (char*)employee->id,        sizeof(char) * 33);
   serlib_serialize_data(b, (char*)employee->first,     sizeof(char) * 51);
