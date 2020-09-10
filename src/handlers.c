@@ -31,7 +31,7 @@ void empman_rest_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* clien
 
   int rc = 0;
   int recv_size = 0;
-  int addr_len = sizeof(struct sockaddr);
+  socklen_t addr_len = sizeof(struct sockaddr);
   
   rc = socklib_socket_send_to(sockfd,
                              client_send_ser_buffer->buffer,
@@ -98,7 +98,7 @@ employee_t* empman_rest_handlers_employees_get_id(char* id) {
  * Deserializes an employee.
  * ----------------------------------------------------------------------
  */
-void empman_rest_deserialize_employee_t(ser_buff_t* b, void* data) {
+void empman_rest_deserialize_employee_t(void* data, ser_buff_t* b) {
   unsigned int sentinel = 0;
 
   serlib_serialize_data(b, (char*)&sentinel, sizeof(unsigned int));
