@@ -5,11 +5,11 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <string.h>
+#include <sockets.h>
+#include <serialize.h>
 
-#include "headers/handlers.h"
-#include "headers/employee.h"
-#include "headers/serialize.h"
-#include "headers/sockets.h"
+#include "../include/handlers.h"
+#include "../include/employee.h"
 
 #define MULTIPLY_ID 55
 #define EMP_MAN_GET_EMP_ID 0

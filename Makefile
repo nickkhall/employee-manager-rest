@@ -41,6 +41,8 @@ SRCS = $(wildcard src/*.c)
 OPTS =
 
 ##### Dependency Rules ############################################################################
+.PHONY: debug clean gdb_debug gdb_debugger
+.SILENT: clean
 
 $(_PROJ): 
 	$(_CC) main.c $(SRCS) -o $(_BDIR)/$@ $(_CARGS)
@@ -59,7 +61,6 @@ clean:
 # Debug executubale
 debug: 
 	$(_CC) $(_DEBUG_FLAGS) main.c $(SRCS) -o $(_DEBUG_EXE) $(_CARGS)
-
 
 # GDB debug exectubale
 gdb_debug:	

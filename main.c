@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "src/headers/handlers.h"
-#include "src/headers/employee.h"
+#include "include/handlers.h"
+#include "include/employee.h"
 
 int main(int argc, char** argv) {
   //int a = 20;
