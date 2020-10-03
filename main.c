@@ -23,7 +23,7 @@ int main(int argc, char** argv) {
   *(id + 2) = 'c';
   *(id + 3) = 'k';
 
-  employee_t* employee = empman_rest_handlers_employees_get_id(id);
+  list_t* employee = empman_rest_handlers_employees_get_id(id);
 
   free(id);
 

@@ -31,7 +31,7 @@ void empman_rest_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* clien
 
   int rc = 0;
   int recv_size = 0;
-  int addr_len = sizeof(struct sockaddr);
+  socklen_t addr_len = sizeof(struct sockaddr);
   
   rc = socklib_socket_send_to(sockfd,
                              client_send_ser_buffer->buffer,
@@ -58,7 +58,7 @@ void empman_rest_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* clien
  *
  * -------------------------------------------------------------
  */
-employee_t* empman_rest_handlers_employees_get_id(char* id) {
+list_t* empman_rest_handlers_employees_get_id(char* id) {
   // any rpc init functionality ??
   empman_rest_init();
 
@@ -79,13 +79,13 @@ employee_t* empman_rest_handlers_employees_get_id(char* id) {
   client_send_ser_buffer = NULL;
 
   // deserialize response (recv_buffer)
-  employee_t* response = empman_rest_deserialize_employees_get_id(client_recv_ser_buffer);
+  list_t* employees = empman_rest_deserialize_employees_get_id(client_recv_ser_buffer);
   
   // free recv_buffer
   serlib_free_buffer(client_recv_ser_buffer);
 
   // return response (employee_t)
-  return response;
+  return employees;
 };
 
 
@@ -98,29 +98,37 @@ employee_t* empman_rest_handlers_employees_get_id(char* id) {
  * Deserializes an employee.
  * ----------------------------------------------------------------------
  */
-employee_t* empman_rest_deserialize_employee_t(employee_t* employee, ser_buff_t* b) {
+void empman_rest_deserialize_employee_t(void* data, ser_buff_t* b) {
   unsigned int sentinel = 0;
 
   serlib_serialize_data(b, (char*)&sentinel, sizeof(unsigned int));
 
   if (sentinel == 0xFFFFFFFF) {
-    return NULL;
+    return;
   }
 
+  // take ser buffer data and memcpy it to void* data
   serlib_buffer_skip(b, -1 * sizeof(unsigned long int));
 
-  employee = malloc(sizeof(employee_t));
+  // create && allocate memory for children for employee 
+  employee_t* employee = (employee_t*) malloc(sizeof(employee_t));
+  if (!employee) {
+    printf("ERROR :: REST - Failed to allocate memory for employee in empman_rest_deserialize_employee_t\n");
+    free(b);
+    free(data);
+    exit(1);
+  }
 
-  serlib_serialize_data(b, (char*)employee->id,        sizeof(char) * 33);
-  serlib_serialize_data(b, (char*)employee->first,     sizeof(char) * 51);
-  serlib_serialize_data(b, (char*)employee->last,      sizeof(char) * 51);
-  serlib_serialize_data(b, (char*)employee->email,     sizeof(char) * 101);
-  serlib_serialize_data(b, (char*)employee->address,   sizeof(char) * 76);
-  serlib_serialize_data(b, (char*)employee->phone,     sizeof(char) * 51);
-  serlib_serialize_data(b, (char*)employee->start,     sizeof(time_t));
-  serlib_serialize_data(b, (char*)employee->gender,    sizeof(char) * 7);
-  serlib_serialize_data(b, (char*)employee->ethnicity, sizeof(char) * 51);
-  serlib_serialize_data(b, (char*)employee->title,     sizeof(char) * 51);
+  serlib_deserialize_data(b, (char*)&employee->id,        sizeof(char) * 33);
+  serlib_deserialize_data(b, (char*)&employee->first,     sizeof(char) * 51);
+  serlib_deserialize_data(b, (char*)&employee->last,      sizeof(char) * 51);
+  serlib_deserialize_data(b, (char*)&employee->email,     sizeof(char) * 101);
+  serlib_deserialize_data(b, (char*)&employee->address,   sizeof(char) * 76);
+  serlib_deserialize_data(b, (char*)&employee->phone,     sizeof(char) * 51);
+  serlib_deserialize_data(b, (char*)&employee->start,     sizeof(time_t));
+  serlib_deserialize_data(b, (char*)&employee->gender,    sizeof(char) * 7);
+  serlib_deserialize_data(b, (char*)&employee->ethnicity, sizeof(char) * 51);
+  serlib_deserialize_data(b, (char*)&employee->title,     sizeof(char) * 51);
 
   serlib_serialize_data(b, (char*)&sentinel, sizeof(int));
 
@@ -129,10 +137,8 @@ employee_t* empman_rest_deserialize_employee_t(employee_t* employee, ser_buff_t*
   } else {
     serlib_buffer_skip(b, -1 * sizeof(unsigned long int));
     employee->salary = calloc(1, sizeof(int));
-    serlib_serialize_data(b, (char*) employee->salary, sizeof(int));
+    serlib_serialize_data(b, (char*)employee->salary, sizeof(int));
   }
-
-  return employee;
 };
 
 
@@ -192,8 +198,18 @@ ser_buff_t* empman_rest_serialize_employees_get_id(char* id) {
   return client_send_ser_buffer;
 };
 
-employee_t* empman_rest_deserialize_employees_get_id(ser_buff_t* client_recv_ser_buffer) {
-  serlib_deserialize_list_t(client_recv_ser_buffer, empman_rest_deserialize_employee_t);
+list_t* empman_rest_deserialize_employees_get_id(ser_buff_t* client_recv_ser_buffer) {
+  ser_header_t* rpc_ser_header = (ser_header_t*) malloc(sizeof(ser_header_t));
+
+  serlib_deserialize_data(client_recv_ser_buffer, (char*)&rpc_ser_header->tid,          sizeof(rpc_ser_header->tid));
+  serlib_deserialize_data(client_recv_ser_buffer, (char*)&rpc_ser_header->rpc_proc_id,  sizeof(rpc_ser_header->rpc_proc_id));
+  serlib_deserialize_data(client_recv_ser_buffer, (char*)&rpc_ser_header->rpc_call_id,  sizeof(rpc_ser_header->rpc_call_id));
+  serlib_deserialize_data(client_recv_ser_buffer, (char*)&rpc_ser_header->payload_size, sizeof(rpc_ser_header->payload_size));
+
+  list_t* employees = (list_t*) malloc(sizeof(list_t));
+  employees = serlib_deserialize_list_t(client_recv_ser_buffer, empman_rest_deserialize_employee_t);
+
+  return employees;
 };
 
 void empman_rest_init() {
