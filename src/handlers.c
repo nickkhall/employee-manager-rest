@@ -216,7 +216,7 @@ employee_t* employees_deserialize_employee_t(list_node_t* data, ser_buff_t* b) {
     return NULL;
   }
 
-  serlib_buffer_skip(b, -1 * sizeof(unsigned int));
+  serlib_buffer_skip(b, (-1 * sizeof(unsigned int)));
 
   employee_t* employee = (employee_t*) malloc(sizeof(employee_t));
   employees_employee_initialize(employee);
