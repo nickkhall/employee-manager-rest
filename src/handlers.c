@@ -221,16 +221,16 @@ employee_t* employees_deserialize_employee_t(list_node_t* data, ser_buff_t* b) {
   employee_t* employee = (employee_t*) malloc(sizeof(employee_t));
   employees_employee_initialize(employee);
 
-  serlib_deserialize_data(b, employee->id,        sizeof(char) * 33);
-  serlib_deserialize_data(b, employee->first,     sizeof(char) * 51);
-  serlib_deserialize_data(b, employee->last,      sizeof(char) * 51);
-  serlib_deserialize_data(b, employee->email,     sizeof(char) * 101);
-  serlib_deserialize_data(b, employee->address,   sizeof(char) * 76);
-  serlib_deserialize_data(b, employee->phone,     sizeof(char) * 51);
-  serlib_deserialize_data(b, employee->start,     sizeof(time_t));
-  serlib_deserialize_data(b, employee->gender,    sizeof(char) * 7);
-  serlib_deserialize_data(b, employee->ethnicity, sizeof(char) * 51);
-  serlib_deserialize_data(b, employee->title,     sizeof(char) * 51);
+  serlib_deserialize_data(b, employee->id,           sizeof(char) * 33);
+  serlib_deserialize_data(b, employee->first,        sizeof(char) * 51);
+  serlib_deserialize_data(b, employee->last,         sizeof(char) * 51);
+  serlib_deserialize_data(b, employee->email,        sizeof(char) * 101);
+  serlib_deserialize_data(b, employee->address,      sizeof(char) * 76);
+  serlib_deserialize_data(b, employee->phone,        sizeof(char) * 51);
+  serlib_deserialize_data(b, (char*)&employee->start, sizeof(time_t));
+  serlib_deserialize_data(b, employee->gender,       sizeof(char) * 7);
+  serlib_deserialize_data(b, employee->ethnicity,    sizeof(char) * 51);
+  serlib_deserialize_data(b, employee->title,        sizeof(char) * 51);
 
   serlib_serialize_data(b, (char*)&sentinel, sizeof(int));
 
@@ -248,7 +248,6 @@ employee_t* employees_deserialize_employee_t(list_node_t* data, ser_buff_t* b) {
   free(employee->email);
   free(employee->address);
   free(employee->phone);
-  free(employee->start);
   free(employee->gender);
   free(employee->ethnicity);
   free(employee->title);
