@@ -4,6 +4,12 @@
 #include "include/handlers.h"
 #include "include/employee.h"
 
+void print_employee(employee_t* item);
+
+void print_employee(employee_t* item) {
+  printf("first name: %s\n", item->first);
+}
+
 int main(int argc, char** argv) {
   //int a = 20;
   //int b = 10;
@@ -24,6 +30,8 @@ int main(int argc, char** argv) {
   *(id + 3) = 'k';
 
   list_t* employee = empman_rest_handlers_employees_get_id(id);
+
+  serlib_list_iterate(employee, print_employee);
 
   free(id);
 

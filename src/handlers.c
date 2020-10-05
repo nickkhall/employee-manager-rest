@@ -241,7 +241,7 @@ employee_t* employees_deserialize_employee_t(list_node_t* data, ser_buff_t* b) {
     serlib_deserialize_data(b, (char*) employee->salary, sizeof(int*));
   }
 
-  data = &employee;
+  data->data = &employee;
 }
 
 /*
