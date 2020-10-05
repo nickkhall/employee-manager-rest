@@ -208,15 +208,15 @@ void employees_deserialize_employee_t_wrapper(void* data, ser_buff_t* b) {
  * ----------------------------------------------------------------------
  */
 employee_t* employees_deserialize_employee_t(list_node_t* data, ser_buff_t* b) {
-  unsigned int sentinel = 0;
+  int sentinel = 0;
 
-  serlib_serialize_data(b, (char*)&sentinel, sizeof(unsigned int));
+  serlib_serialize_data(b, (char*)&sentinel, sizeof(int));
 
   if (sentinel == 0xFFFFFFFF) {
     return NULL;
   }
 
-  serlib_buffer_skip(b, (-1 * sizeof(unsigned int)));
+  serlib_buffer_skip(b, (int)(-1 * sizeof(int)));
 
   employee_t* employee = (employee_t*) malloc(sizeof(employee_t));
   employees_employee_initialize(employee);
@@ -241,18 +241,7 @@ employee_t* employees_deserialize_employee_t(list_node_t* data, ser_buff_t* b) {
     serlib_deserialize_data(b, (char*) employee->salary, sizeof(int*));
   }
 
-  memcpy(data, employee, sizeof(employee_t));
-  free(employee->id);
-  free(employee->first);
-  free(employee->last);
-  free(employee->email);
-  free(employee->address);
-  free(employee->phone);
-  free(employee->gender);
-  free(employee->ethnicity);
-  free(employee->title);
-  free(employee->salary);
-  free(employee);
+  data = &employee;
 }
 
 /*
