@@ -32,7 +32,7 @@ employee_t* employees_employee_initialize(employee_t* employee) {
   employee->email =     (char*) malloc(sizeof(char) * 101);
   employee->address =   (char*) malloc(sizeof(char) * 76);
   employee->phone =     (char*) malloc(sizeof(char) * 51);
-  employee->start =     0;
+  employee->start =     (time_t*) malloc(sizeof(time_t));
   employee->gender =    (char*) malloc(sizeof(char) * 7);
   employee->ethnicity = (char*) malloc(sizeof(char) * 51);
   employee->title =     (char*) malloc(sizeof(char) * 51);
@@ -144,7 +144,7 @@ employee_t* employees_employee_create(char** data) {
   employee->email =     (char*) *(data + 3);
   employee->address =   (char*) *(data + 4);
   employee->phone =     (char*) *(data + 5);
-  employee->start =     (time_t) *(data + 6);
+  employee->start =     (time_t*) *(data + 6);
   employee->ethnicity = (char*) *(data + 7);
   employee->gender =    (char*) *(data + 8);
   employee->title =     (char*) *(data + 9);
@@ -227,7 +227,7 @@ employee_t* employees_deserialize_employee_t(list_node_t* data, ser_buff_t* b) {
   serlib_deserialize_data(b, employee->email,         sizeof(char) * 101);
   serlib_deserialize_data(b, employee->address,       sizeof(char) * 76);
   serlib_deserialize_data(b, employee->phone,         sizeof(char) * 51);
-  serlib_deserialize_data(b, (char*)&employee->start, sizeof(time_t));
+  serlib_deserialize_time_t(b, employee->start, sizeof(time_t*));
   serlib_deserialize_data(b, employee->gender,        sizeof(char) * 7);
   serlib_deserialize_data(b, employee->ethnicity,     sizeof(char) * 51);
   serlib_deserialize_data(b, employee->title,         sizeof(char) * 51);
@@ -238,10 +238,10 @@ employee_t* employees_deserialize_employee_t(list_node_t* data, ser_buff_t* b) {
     employee->salary = NULL;
   } else {
     serlib_buffer_skip(b, -1 * sizeof(unsigned long int));
-    serlib_deserialize_data(b, (char*) employee->salary, sizeof(int*));
+    serlib_deserialize_data_int_ptr(b, employee->salary, sizeof(int*));
   }
 
-  data->data = employee;
+  memcpy(data, employee, sizeof(employee_t));
 }
 
 /*
