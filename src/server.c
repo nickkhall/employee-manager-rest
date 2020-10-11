@@ -36,13 +36,6 @@ int* server_init() {
     exit(1);
   }
 
-  // listen and accept up to 1 MILLION sockets
-  // honey badge dont care, honey badger dont giva shit
-  listen(*sock_tcp_fd, 1000000);
-
-  // print running message to screen
-  printf("- Employee Manager - \nREST - Server is now listening on port %d...\n", REST_SERVER_PORT);
-
   return sock_tcp_fd;
 }
 
@@ -82,6 +75,13 @@ void server_process_traffic(ser_buff_t** recv_buffer, ser_buff_t** send_buffer)
 void server_handle_traffic()
 {
   int* sock_tcp_fd = server_init();
+
+  // listen and accept up to 1 HUNDRED connections
+  // honey badge dont care, honey badger dont giva shit
+  listen(*sock_tcp_fd, 100);
+  // print running message to screen
+  printf("- Employee Manager - \nREST - Server is now listening on port %d...\n", REST_SERVER_PORT);
+
   struct sockaddr_in* server_addr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
   if (!server_addr) {
     printf("ERROR:: REST - Failed to allocate memory for server socket to handle traffic\n");
@@ -99,6 +99,9 @@ void server_handle_traffic()
   // reset recv buffer
   serlib_reset_buffer(*recv_buffer);
 
+  // accept incoming requests
+  accept(*sock_tcp_fd, (struct sockaddr_in*) &client_addr, (socklen_t*) &addr_len);
+  
   // receive data from request into local buffer
   int len = recvfrom(*sock_tcp_fd, &(*(*recv_buffer)->buffer),
                      serlib_get_buffer_length(*recv_buffer),
@@ -112,8 +115,7 @@ void server_handle_traffic()
   serlib_reset_buffer(*send_buffer);
 
   // process request
-  server_process_traffic(recv_buffer,
-                            send_buffer);
+  server_process_traffic(recv_buffer, send_buffer);
 
   // send the serialized result to client
   len = sendto(*sock_tcp_fd, (*send_buffer)->buffer,
@@ -123,5 +125,7 @@ void server_handle_traffic()
 
   // reset send buffer
   serlib_reset_buffer(*send_buffer);
+
+  close(*sock_tcp_fd);
 }
 
