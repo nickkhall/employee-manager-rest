@@ -83,9 +83,6 @@ void empman_rest_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* clien
  * -------------------------------------------------------------
  */
 list_t* empman_rest_handlers_employees_get_id(char* id) {
-  // any rpc init functionality ??
-  empman_rest_init();
-
   // initialize send serialized buffer's 
   ser_buff_t* client_send_ser_buffer = empman_rest_serialize_employees_get_id(id);
   // declare recv serialized buffer (NULL)
