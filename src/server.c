@@ -6,6 +6,9 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <pthread.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <sys/wait.h>
 
 #include <serialize.h>
 #include <sockets.h>
@@ -74,20 +77,23 @@ void server_process_traffic(ser_buff_t** recv_buffer, ser_buff_t** send_buffer)
   }
 }
 
-void server_socket_new_thread(int* socket, ser_buff_t* recv_buffer, ser_buff_t* send_buffer) { 
+void server_socket_new_thread(int* socket,
+                              ser_buff_t** recv_buffer,
+                              ser_buff_t** send_buffer,
+                              struct sockaddr* client_addr,
+                              socklen_t* addr_len) { 
+  // create new socket
   int new_socket = *socket;
 
-  int len = recv(*socket, &(*(*recv_buffer)->buffer),
-       serlib_get_buffer_length(*recv_buffer),
-       0, (struct sockaddr*)&client_addr,
-       (socklen_t*)&addr_len);
+  // receive data
+  int len = recv(*socket, &(*(*recv_buffer)->buffer), serlib_get_buffer_length(*recv_buffer), 0);
   
   // create and apply thread lock
-  pthread_mutext_t lock;
+  pthread_mutex_t lock;
   pthread_mutex_init(&lock, NULL);
   pthread_mutex_lock(&lock);
 
-  // print status
+  // print received bytes
   printf("REST server recieved %d bytes\n", len);
   
   // reset send buffer
@@ -100,22 +106,21 @@ void server_socket_new_thread(int* socket, ser_buff_t* recv_buffer, ser_buff_t* 
   pthread_mutex_unlock(&lock);
   
   // send the serialized result to client
-  len = send(*new_socket, (*send_buffer)->buffer,
-       serlib_get_buffer_length(*send_buffer),
-       0, (struct sockaddr*)&client_addr,
-       sizeof(struct sockaddr));
+  len = send(new_socket, (*send_buffer)->buffer, serlib_get_buffer_length(*send_buffer), 0); 
 
+  // print sent bytes
   printf("Employee Manager REST - Sent %d bytes.\n", len);
   
   // reset send buffer
   serlib_reset_buffer(*send_buffer);
 
-  close(*socket);
+  // close socket
+  close(new_socket);
 }
 
 void server_handle_traffic()
 {
-  int* server_new_socket;
+  int* server_new_socket = (int*) malloc(sizeof(int));
   int* server_socket = server_init();
   struct sockaddr_storage server_storage;
   pid_t pid[50];
@@ -146,17 +151,16 @@ void server_handle_traffic()
     printf("Employee Manager - \nREST - Server is now listening on port %d...\n", REST_SERVER_PORT);
   } else {
     printf("Error\n");
-    pthread_t tid[60];
     int i = 0;
 
     while(1) {
       addr_len = sizeof(server_storage);
-      server_new_socket = accept(*server_socket, (struct sockaddr_in*) &client_addr, (socklen_t*) &addr_len);
+      *server_new_socket = accept(*server_socket, (struct sockaddr*) &client_addr, &addr_len);
 
       int pid_c = 0;
 
       if ((pid_c = fork()) == 0) {
-        server_socket_new_thread(server_new_socket);
+        server_socket_new_thread(server_new_socket, recv_buffer, send_buffer, (struct sockaddr*) &client_addr, (socklen_t*) &addr_len);
       } else {
         *(pid + (i++)) = pid_c;
 
