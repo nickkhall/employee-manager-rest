@@ -5,6 +5,8 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <pthread.h>
+
 #include <serialize.h>
 #include <sockets.h>
 
@@ -13,30 +15,30 @@
 
 int* server_init() {
   // create socket memory
-  int* sock_tcp_fd = (int*) malloc(sizeof(int));
-  if (!sock_tcp_fd) {
+  int* server_socket = (int*) malloc(sizeof(int));
+  if (!server_socket) {
     printf("ERROR:: REST - Failed to allocate memory for socket in server_init\n");
     return NULL;
   }
 
   // create socket
-  sock_tcp_fd = socklib_socket_create(REST_SERVER_PORT);
-  if (*sock_tcp_fd == -1) {
+  server_socket = socklib_socket_create(REST_SERVER_PORT);
+  if (*server_socket == -1) {
     printf("ERROR:: REST - Failed to create socket in server_init\n");
     exit(1);
   }
 
   // create server socket
-  struct sockaddr_in* server_addr = socklib_socket_build_sock_addr_in(sock_tcp_fd, AF_INET, REST_SERVER_PORT);
+  struct sockaddr_in* server_addr = socklib_socket_build_sock_addr_in(server_socket, AF_INET, REST_SERVER_PORT);
 
   // bind to rest port
-  int binded = bind(*sock_tcp_fd, (struct sockaddr*) &*server_addr, sizeof(struct sockaddr));
+  int binded = bind(*server_socket, (struct sockaddr*) &(*server_addr), sizeof(struct sockaddr));
   if (binded == -1) {
     printf("REST ERROR:: Failed to bind to socket\n");
     exit(1);
   }
 
-  return sock_tcp_fd;
+  return server_socket;
 }
 
 void server_init_buffers(ser_buff_t** recv_buffer, ser_buff_t** send_buffer)
@@ -72,60 +74,103 @@ void server_process_traffic(ser_buff_t** recv_buffer, ser_buff_t** send_buffer)
   }
 }
 
+void server_socket_new_thread(int* socket, ser_buff_t* recv_buffer, ser_buff_t* send_buffer) { 
+  int new_socket = *socket;
+
+  int len = recv(*socket, &(*(*recv_buffer)->buffer),
+       serlib_get_buffer_length(*recv_buffer),
+       0, (struct sockaddr*)&client_addr,
+       (socklen_t*)&addr_len);
+  
+  // create and apply thread lock
+  pthread_mutext_t lock;
+  pthread_mutex_init(&lock, NULL);
+  pthread_mutex_lock(&lock);
+
+  // print status
+  printf("REST server recieved %d bytes\n", len);
+  
+  // reset send buffer
+  serlib_reset_buffer(*send_buffer);
+  
+  // process request
+  server_process_traffic(recv_buffer, send_buffer);
+
+  // unlock the thread's memory
+  pthread_mutex_unlock(&lock);
+  
+  // send the serialized result to client
+  len = send(*new_socket, (*send_buffer)->buffer,
+       serlib_get_buffer_length(*send_buffer),
+       0, (struct sockaddr*)&client_addr,
+       sizeof(struct sockaddr));
+
+  printf("Employee Manager REST - Sent %d bytes.\n", len);
+  
+  // reset send buffer
+  serlib_reset_buffer(*send_buffer);
+
+  close(*socket);
+}
+
 void server_handle_traffic()
 {
-  int* sock_tcp_fd = server_init();
+  int* server_new_socket;
+  int* server_socket = server_init();
+  struct sockaddr_storage server_storage;
+  pid_t pid[50];
 
-  // listen and accept up to 1 HUNDRED connections
+  // listen and accept up to 40 connections
   // honey badge dont care, honey badger dont giva shit
-  listen(*sock_tcp_fd, 100);
-  // print running message to screen
-  printf("- Employee Manager - \nREST - Server is now listening on port %d...\n", REST_SERVER_PORT);
+  int listen_status = listen(*server_socket, 40);
 
   struct sockaddr_in* server_addr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
   if (!server_addr) {
     printf("ERROR:: REST - Failed to allocate memory for server socket to handle traffic\n");
     exit(1);
   }
-
+  
   struct sockaddr_in client_addr;
   int addr_len = sizeof(struct sockaddr);
-
+  
   // create and initialize send/recv buffers
   ser_buff_t** recv_buffer = (ser_buff_t**) malloc(MAX_RECV_BUFF_SIZE);
   ser_buff_t** send_buffer = (ser_buff_t**) malloc(MAX_RECV_BUFF_SIZE);
   server_init_buffers(recv_buffer, send_buffer);
-
+  
   // reset recv buffer
   serlib_reset_buffer(*recv_buffer);
-
-  // accept incoming requests
-  accept(*sock_tcp_fd, (struct sockaddr_in*) &client_addr, (socklen_t*) &addr_len);
   
-  // receive data from request into local buffer
-  int len = recvfrom(*sock_tcp_fd, &(*(*recv_buffer)->buffer),
-                     serlib_get_buffer_length(*recv_buffer),
-                     0, (struct sockaddr*)&client_addr,
-                     (socklen_t*)&addr_len);
+  if (listen_status == 0) {
+    // print running message to screen
+    printf("Employee Manager - \nREST - Server is now listening on port %d...\n", REST_SERVER_PORT);
+  } else {
+    printf("Error\n");
+    pthread_t tid[60];
+    int i = 0;
 
-  // print status
-  printf("REST server recieved %d bytes\n", len);
+    while(1) {
+      addr_len = sizeof(server_storage);
+      server_new_socket = accept(*server_socket, (struct sockaddr_in*) &client_addr, (socklen_t*) &addr_len);
 
-  // reset send buffer
-  serlib_reset_buffer(*send_buffer);
+      int pid_c = 0;
 
-  // process request
-  server_process_traffic(recv_buffer, send_buffer);
+      if ((pid_c = fork()) == 0) {
+        server_socket_new_thread(server_new_socket);
+      } else {
+        *(pid + (i++)) = pid_c;
 
-  // send the serialized result to client
-  len = sendto(*sock_tcp_fd, (*send_buffer)->buffer,
-              serlib_get_buffer_length(*send_buffer),
-              0, (struct sockaddr*)&client_addr,
-              sizeof(struct sockaddr));
+        if (i >= 49) {
+          i = 0;
 
-  // reset send buffer
-  serlib_reset_buffer(*send_buffer);
-
-  close(*sock_tcp_fd);
+          while (i < 50) {
+            waitpid(*(pid + (i++)), NULL, 0);
+          }
+          
+          i = 0;
+        }
+      }
+    }
+  }    
 }
 
