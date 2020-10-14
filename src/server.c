@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <errno.h>
+#include <libexplain/bind.h>
 
 #include <serialize.h>
 #include <sockets.h>
@@ -128,9 +129,9 @@ void server_handle_traffic()
 
   // bind to rest port
   int binded = bind(*server_socket, (struct sockaddr*) server_addr, sizeof(struct sockaddr));
-  if (binded == -1) {
-    printf("REST ERROR:: Failed to bind to socket\n");
-    exit(1);
+  if (binded < 0) {
+    fprintf(stderr, "%s\n", explain_bind(*server_socket, (const struct sockaddr*) server_addr, sizeof(struct sockaddr)));
+    exit(EXIT_FAILURE);
   }
   
   struct sockaddr_in client_addr;
