@@ -17,7 +17,8 @@
 #include "../include/common.h"
 #include "../include/server.h"
 
-int* server_init() {
+int* server_init()
+{
   // create socket memory
   int* server_socket = (int*) malloc(sizeof(int));
   if (!server_socket) {
@@ -72,7 +73,8 @@ void server_socket_new_thread(int* socket,
                               ser_buff_t** recv_buffer,
                               ser_buff_t** send_buffer,
                               struct sockaddr* client_addr,
-                              socklen_t* addr_len) { 
+                              socklen_t* addr_len)
+{ 
   // create new socket
   int new_socket = *socket;
 
@@ -158,8 +160,9 @@ void server_handle_traffic()
       *server_new_socket = accept(*server_socket, (struct sockaddr*) &client_addr, (socklen_t*) &addr_len);
 
       int pid_c = 0;
+      pid_c = fork();
 
-      if ((pid_c = fork()) == 0) {
+      if (pid_c == 0) {
         server_socket_new_thread(server_new_socket, recv_buffer, send_buffer, (struct sockaddr*) &client_addr, (socklen_t*) &addr_len);
       } else {
         *(pid + (i++)) = pid_c;
