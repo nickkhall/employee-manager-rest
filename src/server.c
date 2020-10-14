@@ -25,8 +25,8 @@ int* server_init() {
     return NULL;
   }
 
-  // create socket
-  server_socket = socklib_socket_create(REST_SERVER_PORT);
+  // create tcp socket (2nd param is tcp flag)
+  server_socket = socklib_socket_create(REST_SERVER_PORT, 1);
   if (*server_socket == -1) {
     printf("ERROR:: REST - Failed to create socket in server_init\n");
     exit(1);
@@ -151,8 +151,6 @@ void server_handle_traffic()
   if (listen_status == 0) {
     // print running message to screen
     printf("Employee Manager - \nREST - Server is now listening on port %d...\n", REST_SERVER_PORT);
-  } else {
-    printf("Error\n");
     int i = 0;
 
     while(1) {
