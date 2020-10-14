@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <errno.h>
 
 #include <serialize.h>
 #include <sockets.h>
@@ -28,16 +29,6 @@ int* server_init() {
   server_socket = socklib_socket_create(REST_SERVER_PORT);
   if (*server_socket == -1) {
     printf("ERROR:: REST - Failed to create socket in server_init\n");
-    exit(1);
-  }
-
-  // create server socket
-  struct sockaddr_in* server_addr = socklib_socket_build_sock_addr_in(server_socket, AF_INET, REST_SERVER_PORT);
-
-  // bind to rest port
-  int binded = bind(*server_socket, (struct sockaddr*) &(*server_addr), sizeof(struct sockaddr));
-  if (binded == -1) {
-    printf("REST ERROR:: Failed to bind to socket\n");
     exit(1);
   }
 
@@ -122,21 +113,32 @@ void server_handle_traffic()
 {
   int* server_new_socket = (int*) malloc(sizeof(int));
   int* server_socket = server_init();
+
   struct sockaddr_storage server_storage;
+
   pid_t pid[50];
 
   // listen and accept up to 40 connections
   // honey badge dont care, honey badger dont giva shit
-  int listen_status = listen(*server_socket, 40);
 
-  struct sockaddr_in* server_addr = (struct sockaddr_in*) malloc(sizeof(struct sockaddr_in));
-  if (!server_addr) {
-    printf("ERROR:: REST - Failed to allocate memory for server socket to handle traffic\n");
+  // create server socket
+  struct sockaddr_in* server_addr = socklib_socket_build_sock_addr_in(server_socket, AF_INET, REST_SERVER_PORT);
+
+  // bind to rest port
+  int binded = bind(*server_socket, (struct sockaddr*) server_addr, sizeof(struct sockaddr));
+  if (binded == -1) {
+    printf("REST ERROR:: Failed to bind to socket\n");
     exit(1);
   }
   
   struct sockaddr_in client_addr;
   int addr_len = sizeof(struct sockaddr);
+
+  int listen_status = listen(*server_socket, 40);
+  if (listen_status < 0) {
+    printf("ERROR :: Employee Manager REST - Failed to listen on port %d\n", REST_SERVER_PORT);
+    exit(EXIT_FAILURE);
+  }
   
   // create and initialize send/recv buffers
   ser_buff_t** recv_buffer = (ser_buff_t**) malloc(MAX_RECV_BUFF_SIZE);
@@ -155,7 +157,7 @@ void server_handle_traffic()
 
     while(1) {
       addr_len = sizeof(server_storage);
-      *server_new_socket = accept(*server_socket, (struct sockaddr*) &client_addr, &addr_len);
+      *server_new_socket = accept(*server_socket, (struct sockaddr*) &client_addr, (socklen_t*) &addr_len);
 
       int pid_c = 0;
 
