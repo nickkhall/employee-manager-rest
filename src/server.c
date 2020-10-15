@@ -16,9 +16,10 @@
 #include <sockets.h>
 
 #include "../include/common.h"
+#include "../include/handlers.h"
 #include "../include/server.h"
 
-int* server_init()
+int* server_init(void)
 {
   // create socket memory
   int* server_socket = (int*) malloc(sizeof(int));
@@ -28,7 +29,7 @@ int* server_init()
   }
 
   // create tcp socket (2nd param is tcp flag)
-  server_socket = socklib_socket_create(REST_SERVER_PORT, 1);
+  server_socket = socklib_socket_create(REST_SERVER_HOST, REST_SERVER_PORT, 1);
   if (*server_socket == -1) {
     printf("ERROR:: REST - Failed to create socket in server_init\n");
     exit(1);
@@ -62,9 +63,7 @@ void server_process_traffic(ser_buff_t** recv_buffer, ser_buff_t** send_buffer)
   // @TODO: update to use `rest_call_id` instead of `rest_proc_id`
   switch (rest_ser_header->rpc_proc_id) {
     default:
-      printf("Default switch\n");
-      free(recv_buffer);
-      free(send_buffer);
+      printf("default switch case called\n");
       server_handle_traffic();
       break;
   }
@@ -112,7 +111,7 @@ void server_socket_new_thread(int* socket,
   close(new_socket);
 }
 
-void server_handle_traffic()
+void server_handle_traffic(void)
 {
   int* server_new_socket = (int*) malloc(sizeof(int));
   int* server_socket = server_init();
@@ -120,9 +119,6 @@ void server_handle_traffic()
   struct sockaddr_storage server_storage;
 
   pid_t pid[50];
-
-  // listen and accept up to 40 connections
-  // honey badge dont care, honey badger dont giva shit
 
   // create server socket
   struct sockaddr_in* server_addr = socklib_socket_build_sock_addr_in(server_socket, AF_INET, REST_SERVER_PORT);
@@ -153,7 +149,8 @@ void server_handle_traffic()
   
   if (listen_status == 0) {
     // print running message to screen
-    printf("Employee Manager - \nREST - Server is now listening on port %d...\n", REST_SERVER_PORT);
+    printf("+------------------------------------------------------------------------+\n");
+    printf("  > Employee Manager REST - Server is now listening on %s:%d\n", REST_SERVER_HOST, REST_SERVER_PORT);
     int i = 0;
 
     while(1) {

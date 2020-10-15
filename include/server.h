@@ -3,13 +3,13 @@
 
 #include <serialize.h>
 
-int* server_init();
+int* server_init(void);
 
 void server_init_buffers(ser_buff_t** recv_buffer, ser_buff_t** send_buffer);
 
 void server_process_traffic(ser_buff_t** recv_buffer, ser_buff_t** send_buffer);
 
-void server_handle_traffic();
+void server_handle_traffic(void);
 
 #endif
 
