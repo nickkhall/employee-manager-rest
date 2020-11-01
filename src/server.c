@@ -124,7 +124,7 @@ void server_handle_traffic(void)
   struct sockaddr_in* server_addr = socklib_socket_build_sock_addr_in(server_socket, AF_INET, REST_SERVER_PORT);
 
   // bind to rest port
-  int binded = bind(*server_socket, (struct sockaddr*) server_addr, sizeof(struct sockaddr));
+  int binded = bind(*server_socket, (struct sockaddr*) &(*server_addr), sizeof(struct sockaddr));
   if (binded < 0) {
     fprintf(stderr, "%s\n", explain_bind(*server_socket, (const struct sockaddr*) server_addr, sizeof(struct sockaddr)));
     exit(EXIT_FAILURE);
