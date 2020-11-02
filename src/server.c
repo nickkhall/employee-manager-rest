@@ -21,15 +21,83 @@
 
 int* server_init(void)
 {
+  // create main server socket
+  int* server_socket = server_new_socket(REST_SERVER_PORT);
+  struct sockaddr_storage server_storage;
+  struct sockaddr_in* server_addr = socklib_socket_build_sock_addr_in(server_socket, AF_INET, REST_SERVER_PORT);
+
+  // bind to REST port
+  int binded = bind(*server_socket, (struct sockaddr*) &(*server_addr), sizeof(struct sockaddr));
+  if (binded < 0) {
+    fprintf(stderr, "%s\n", explain_bind(*server_socket, (const struct sockaddr*) server_addr, sizeof(struct sockaddr)));
+    exit(EXIT_FAILURE);
+  }
+  
+  struct sockaddr_in client_addr;
+  int addr_len = sizeof(struct sockaddr);
+
+  // attempt to start listening on REST port
+  int listen_status = listen(*server_socket, 40);
+  if (listen_status < 0) {
+    printf("ERROR :: Employee Manager REST - Failed to listen on port %d\n", REST_SERVER_PORT);
+    exit(EXIT_FAILURE);
+  }
+
+  pid_t pid[50];
+
+  // create and initialize send/recv buffers
+  ser_buff_t** recv_buffer = (ser_buff_t**) malloc(MAX_RECV_BUFF_SIZE);
+  ser_buff_t** send_buffer = (ser_buff_t**) malloc(MAX_RECV_BUFF_SIZE);
+  server_init_buffers(recv_buffer, send_buffer);
+  
+  // reset recv buffer
+  serlib_reset_buffer(*recv_buffer);  
+
+  if (listen_status == 0) {
+    // print running message to screen
+    printf("+------------------------------------------------------------------------+\n");
+    printf("  > Employee Manager REST - Server is now listening on %s:%d\n", REST_SERVER_HOST, REST_SERVER_PORT);
+    int i = 0;
+
+    while(1) {
+      addr_len = sizeof(server_storage);
+      *server_socket = accept(*server_socket, (struct sockaddr*) &client_addr, (socklen_t*) &addr_len);
+
+      int pid_c = 0;
+      pid_c = fork();
+
+      if (pid_c == 0) {
+        server_socket_new_thread((REST_SERVER_PORT + i),
+                                recv_buffer, send_buffer,
+                                (struct sockaddr*) &client_addr,
+                                (socklen_t*) &addr_len);
+      } else {
+        *(pid + (i++)) = pid_c;
+
+        if (i >= 49) {
+          i = 0;
+
+          while (i < 50) {
+            waitpid(*(pid + (i++)), NULL, 0);
+          }
+          
+          i = 0;
+        }
+      }
+    }
+  }    
+}
+
+int* server_new_socket(int port) {
   // create socket memory
   int* server_socket = (int*) malloc(sizeof(int));
   if (!server_socket) {
-    printf("ERROR:: REST - Failed to allocate memory for socket in server_init\n");
+    printf("ERROR:: REST - Failed to allocate memory for socket on port %d\n", port);
     return NULL;
   }
 
   // create tcp socket (2nd param is tcp flag)
-  server_socket = socklib_socket_create(REST_SERVER_HOST, REST_SERVER_PORT, 1);
+  server_socket = socklib_socket_create(REST_SERVER_HOST, port, 1);
   if (*server_socket == -1) {
     printf("ERROR:: REST - Failed to create socket in server_init\n");
     exit(1);
@@ -64,19 +132,19 @@ void server_process_traffic(ser_buff_t** recv_buffer, ser_buff_t** send_buffer)
   switch (rest_ser_header->rpc_proc_id) {
     default:
       printf("default switch case called\n");
-      server_handle_traffic();
+      printf("PROCESS ID: %s\n", rest_ser_header->rpc_proc_id);
       break;
   }
 }
 
-void server_socket_new_thread(int* socket,
+void server_socket_new_thread(int port,
                               ser_buff_t** recv_buffer,
                               ser_buff_t** send_buffer,
                               struct sockaddr* client_addr,
                               socklen_t* addr_len)
 { 
   // create new socket
-  int new_socket = *socket;
+  int new_socket = server_new_socket(port);;
 
   // receive data
   int len = recv(*socket, &(*(*recv_buffer)->buffer), serlib_get_buffer_length(*recv_buffer), 0);
@@ -109,73 +177,5 @@ void server_socket_new_thread(int* socket,
 
   // close socket
   close(new_socket);
-}
-
-void server_handle_traffic(void)
-{
-  int* server_new_socket = (int*) malloc(sizeof(int));
-  int* server_socket = server_init();
-
-  struct sockaddr_storage server_storage;
-
-  pid_t pid[50];
-
-  // create server socket
-  struct sockaddr_in* server_addr = socklib_socket_build_sock_addr_in(server_socket, AF_INET, REST_SERVER_PORT);
-
-  // bind to rest port
-  int binded = bind(*server_socket, (struct sockaddr*) &(*server_addr), sizeof(struct sockaddr));
-  if (binded < 0) {
-    fprintf(stderr, "%s\n", explain_bind(*server_socket, (const struct sockaddr*) server_addr, sizeof(struct sockaddr)));
-    exit(EXIT_FAILURE);
-  }
-  
-  struct sockaddr_in client_addr;
-  int addr_len = sizeof(struct sockaddr);
-
-  int listen_status = listen(*server_socket, 40);
-  if (listen_status < 0) {
-    printf("ERROR :: Employee Manager REST - Failed to listen on port %d\n", REST_SERVER_PORT);
-    exit(EXIT_FAILURE);
-  }
-  
-  // create and initialize send/recv buffers
-  ser_buff_t** recv_buffer = (ser_buff_t**) malloc(MAX_RECV_BUFF_SIZE);
-  ser_buff_t** send_buffer = (ser_buff_t**) malloc(MAX_RECV_BUFF_SIZE);
-  server_init_buffers(recv_buffer, send_buffer);
-  
-  // reset recv buffer
-  serlib_reset_buffer(*recv_buffer);
-  
-  if (listen_status == 0) {
-    // print running message to screen
-    printf("+------------------------------------------------------------------------+\n");
-    printf("  > Employee Manager REST - Server is now listening on %s:%d\n", REST_SERVER_HOST, REST_SERVER_PORT);
-    int i = 0;
-
-    while(1) {
-      addr_len = sizeof(server_storage);
-      *server_new_socket = accept(*server_socket, (struct sockaddr*) &client_addr, (socklen_t*) &addr_len);
-
-      int pid_c = 0;
-      pid_c = fork();
-
-      if (pid_c == 0) {
-        server_socket_new_thread(server_new_socket, recv_buffer, send_buffer, (struct sockaddr*) &client_addr, (socklen_t*) &addr_len);
-      } else {
-        *(pid + (i++)) = pid_c;
-
-        if (i >= 49) {
-          i = 0;
-
-          while (i < 50) {
-            waitpid(*(pid + (i++)), NULL, 0);
-          }
-          
-          i = 0;
-        }
-      }
-    }
-  }    
 }
 
