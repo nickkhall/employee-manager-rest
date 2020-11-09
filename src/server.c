@@ -13,6 +13,7 @@
 #include <libexplain/bind.h>
 #include <string.h>
 #include <fcntl.h> // nonblocking socket
+#include <arpa/inet.h>
 
 #include <serialize.h>
 #include <sockets.h>
@@ -47,10 +48,12 @@ int* server_init(void)
     exit(EXIT_FAILURE);
   }
 
+  printf("Employee Manager REST Server is now listening...\n");
+
   int client_addr_len = sizeof(client_addr);
   client_socket = accept(*server_socket, (struct sockaddr*) &client_addr, (socklen_t*) &client_addr_len);
   if (client_socket == -1) {
-    perror("accept"); 
+    perror("ERROR:: Client accept"); 
   }
 
   // change the sockets into non-blocking state
@@ -63,23 +66,22 @@ int* server_init(void)
   server_init_buffers(recv_buffer, send_buffer);
   
   // reset recv buffer
-  serlib_reset_buffer(*recv_buffer);  
+  serlib_reset_buffer(*recv_buffer);
 
   int i, n;
   while(1) {
     for (i = *server_socket; i <= last_socket; i++) {
-      printf("Round number %d\n", i);
+      printf("socket: %d\n", i);
       if (i == *server_socket) {
+        printf("REST Server: received connection from %s\n", inet_ntoa(client_addr.sin_addr));
+
         client_addr_len = sizeof(struct sockaddr_in);
 
-        if ((client_socket = accept(*server_socket, (struct sockaddr*) &client_addr, (socklen_t*) &client_addr_len)) == -1) {
-          perror("accept");
-        }
-
-        printf("REST Server: received connection from %d\n", inet_ntoa(client_addr.sin_addr));
+        recv(client_socket, &(*(*recv_buffer)->buffer), serlib_get_buffer_length(*recv_buffer), 0);
 
         fcntl(client_socket, F_SETFL, O_NONBLOCK);
         last_socket = client_socket;
+        printf("data: %s\n", (*recv_buffer)->buffer);
       } else {
         n = recv(client_socket, &(*(*recv_buffer)->buffer), serlib_get_buffer_length(*recv_buffer), 0);
         if (n < 1) {
