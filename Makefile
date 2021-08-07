@@ -66,7 +66,3 @@ debug:
 gdb_debug:	
 	gdb -x $(_DEBUG_CONF)
 
-# GDB debugger server
-gdb_debugger:	
-	$(shell tmux splitw -v "gdbserver localhost:$(_DEBUG_PORT) $(_DEBUG_EXE)") 
-	echo "Employee Manager REST: Debugging on port $(_DEBUG_PORT)..."

@@ -10,20 +10,19 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <errno.h>
-#include <libexplain/bind.h>
+// #include <libexplain/bind.h>
 #include <string.h>
 #include <fcntl.h> // nonblocking socket
 #include <arpa/inet.h>
 
-#include <serialize.h>
-#include <sockets.h>
+#include <serc.h>
+#include <sockc.h>
 
 #include "../include/common.h"
 #include "../include/handlers.h"
 #include "../include/server.h"
 
-int* server_init(void)
-{
+int* server_init(void) {
   // create server socket
   int* server_socket = server_new_socket(REST_SERVER_PORT);
   struct sockaddr_in* server_addr = socklib_socket_build_sock_addr_in(server_socket, AF_INET, REST_SERVER_PORT);
@@ -37,7 +36,7 @@ int* server_init(void)
   // bind to REST port
   int binded = bind(*server_socket, (struct sockaddr*) &(*server_addr), sizeof(struct sockaddr));
   if (binded < 0) {
-    fprintf(stderr, "%s\n", explain_bind(*server_socket, (const struct sockaddr*) server_addr, sizeof(struct sockaddr)));
+    // fprintf(stderr, "%s\n", explain_bind(*server_socket, (const struct sockaddr*) server_addr, sizeof(struct sockaddr)));
     exit(EXIT_FAILURE);
   }
   
