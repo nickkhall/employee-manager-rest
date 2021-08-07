@@ -8,7 +8,7 @@ _SSUF     = c#                                      # Suffix of source files
 _HSUF     = h#                                      # Suffix of header files
 _CC       = gcc#                                    # Compiler to be used
 _CFLAGS   = -std=c11 -Wall#                         # Compiler build flags
-_LIBS     = -lserc -lsockc -lexplain#
+_LIBS     = -lserc -lsockc #                        -lexplain
 _LIBS_DIR = -L/usr/local/lib#
 _SCRIPT   = :#                                      # Any shell script to run before build (replace ':')
 _SHELL    = /bin/bash#                              # Shell to be used by makefile

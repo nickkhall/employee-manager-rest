@@ -24,7 +24,7 @@
 
 int* server_init(void) {
   // create server socket
-  int* server_socket = server_new_socket(REST_SERVER_PORT);
+  int* server_socket = socklib_socket_create(REST_SERVER_PORT);
   struct sockaddr_in* server_addr = socklib_socket_build_sock_addr_in(server_socket, AF_INET, REST_SERVER_PORT);
 
   // create client socket
@@ -43,7 +43,7 @@ int* server_init(void) {
   // attempt to start listening on REST port
   int listen_status = listen(*server_socket, 40);
   if (listen_status < 0) {
-    printf("ERROR :: Employee Manager REST - Failed to listen on port %d\n", REST_SERVER_PORT);
+    printf("ERROR :: Employee Manager REST - Failed to listen on port %d\n%d: %s\n", REST_SERVER_PORT, errno, strerror(errno));
     exit(EXIT_FAILURE);
   }
 
@@ -107,7 +107,7 @@ int* server_new_socket(int port) {
   }
 
   // create tcp socket (2nd param is tcp flag)
-  server_socket = socklib_socket_create(REST_SERVER_HOST, port, 1);
+  server_socket = socklib_socket_create(REST_SERVER_PORT);
   if (*server_socket == -1) {
     printf("ERROR:: REST - Failed to create socket in server_init\n");
     exit(1);

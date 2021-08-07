@@ -8,6 +8,7 @@
 #include <sockc.h>
 #include <serc.h>
 
+#include "../include/common.h"
 #include "../include/handlers.h"
 #include "../include/employee.h"
 
@@ -39,7 +40,7 @@ employee_t* employees_employee_initialize(employee_t* employee) {
 }
 
 void empman_rest_send_recv(ser_buff_t* client_send_ser_buffer, ser_buff_t* client_recv_ser_buffer) {
-  int* sockfd = socklib_socket_create();
+  int* sockfd = socklib_socket_create(REST_SERVER_PORT);
   if (*sockfd == -1) {
     printf("ERROR:: REST - Socket creation failed...\n");
     return;
