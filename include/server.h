@@ -4,7 +4,7 @@
 #include <sys/socket.h>
 #include <serc.h>
 
-int* server_init(void);
+void server_init(int sock_type);
 
 int* server_new_socket(int port);
 
