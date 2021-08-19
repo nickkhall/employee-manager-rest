@@ -21,6 +21,7 @@
 #include "../include/common.h"
 #include "../include/handlers.h"
 #include "../include/server.h"
+#include "../include/utils.h"
 
 void server_init(int sock_type) {
   // create server socket
@@ -83,13 +84,16 @@ void server_init(int sock_type) {
 
         client_addr_len = sizeof(struct sockaddr_in);
 
-        recv(client_socket, &(*(*recv_buffer)->buffer), serlib_get_buffer_length(*recv_buffer), 0);
+        int buffer_len = serlib_get_buffer_length(*recv_buffer);
+
+        recv(client_socket, ((*recv_buffer)->buffer), buffer_len, 0);
 
         fcntl(client_socket, F_SETFL, O_NONBLOCK);
         last_socket = client_socket;
-        printf("data: %s\n", (*recv_buffer)->buffer);
+        parseRequest((*recv_buffer)->buffer, serlib_get_buffer_length(*recv_buffer));
       } else {
-        n = recv(client_socket, &(*(*recv_buffer)->buffer), serlib_get_buffer_length(*recv_buffer), 0);
+        int buffer_len = serlib_get_buffer_length(*recv_buffer);
+        n = recv(client_socket, &(*(*recv_buffer)->buffer), buffer_len, 0);
         if (n < 1) {
           perror("recv - non blocking \n");
           printf("REST Server ERROR:: NON-BLOCKING - Round %d\nData Received - Bytes: %d\n", i, n);
