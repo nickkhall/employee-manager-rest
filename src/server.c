@@ -86,14 +86,14 @@ void server_init(int sock_type) {
 
         int buffer_len = serlib_get_buffer_length(*recv_buffer);
 
-        recv(client_socket, ((*recv_buffer)->buffer), buffer_len, 0);
+        recv(client_socket, (*recv_buffer)->buffer, buffer_len, 0);
 
         fcntl(client_socket, F_SETFL, O_NONBLOCK);
         last_socket = client_socket;
-        parseRequest((*recv_buffer)->buffer, serlib_get_buffer_length(*recv_buffer));
+        parseRequest((*recv_buffer)->buffer, buffer_len);
       } else {
         int buffer_len = serlib_get_buffer_length(*recv_buffer);
-        n = recv(client_socket, &(*(*recv_buffer)->buffer), buffer_len, 0);
+        n = recv(client_socket, (*recv_buffer)->buffer, buffer_len, 0);
         if (n < 1) {
           perror("recv - non blocking \n");
           printf("REST Server ERROR:: NON-BLOCKING - Round %d\nData Received - Bytes: %d\n", i, n);
@@ -168,7 +168,7 @@ void server_socket_new_thread(int port,
   int* new_socket = server_new_socket(port);;
 
   // receive data
-  int len = recv(*new_socket, &(*(*recv_buffer)->buffer), serlib_get_buffer_length(*recv_buffer), 0);
+  int len = recv(*new_socket, (*recv_buffer)->buffer, serlib_get_buffer_length(*recv_buffer), 0);
   
   // create and apply thread lock
   pthread_mutex_t lock;
