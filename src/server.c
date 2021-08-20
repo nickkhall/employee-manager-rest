@@ -90,7 +90,7 @@ void server_init(int sock_type) {
 
         fcntl(client_socket, F_SETFL, O_NONBLOCK);
         last_socket = client_socket;
-        parseRequest((*recv_buffer)->buffer, buffer_len);
+        parse_request((*recv_buffer)->buffer, buffer_len);
       } else {
         int buffer_len = serlib_get_buffer_length(*recv_buffer);
         n = recv(client_socket, (*recv_buffer)->buffer, buffer_len, 0);

@@ -3,6 +3,10 @@
 
 #include "./cJSON.h"
 
-cJSON* parseRequest(char* request, int request_size);
+char* parse_request_type(char* request, int request_size);
+
+char* parse_request_url(const char* request);
+
+cJSON* parse_request(char* request, int request_size);
 
 #endif
